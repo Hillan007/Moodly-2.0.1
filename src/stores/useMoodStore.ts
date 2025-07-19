@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useAuthStore } from './useAuthStore';
+import config from '../config';
 
 export interface MoodEntry {
   id: number;
@@ -30,7 +31,7 @@ interface MoodState {
   loadEntries: () => Promise<void>;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = config.API_BASE_URL;
 
 export const useMoodStore = create<MoodState>()(
   persist(

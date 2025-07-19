@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Moodly Mental Health API Server
-A clean Flask API backend for the React frontend
+Moodly Mental Health API Server - Production Version
+A Flask API backend that serves both API and React frontend
 """
 
 import os
@@ -9,7 +9,7 @@ import sqlite3
 import hashlib
 import secrets
 from datetime import datetime, timedelta
-from flask import Flask, request, session, jsonify
+from flask import Flask, request, session, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from openai import OpenAI
 
@@ -27,13 +27,13 @@ else:
     print("⚠️ OpenAI API key not found - AI features will be disabled")
 
 # Create Flask application instance
-app = Flask(__name__)
+app = Flask(__name__, static_folder='dist', static_url_path='')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in-production')
 
-# Configure CORS to allow requests from React dev server
+# Configure CORS for production
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:8083", "http://localhost:8084", "http://localhost:3000", "http://localhost:5173"],
+        "origins": ["*"],  # In production, you might want to restrict this
         "supports_credentials": True
     }
 })
@@ -262,11 +262,37 @@ def analyze_mood_with_ai(mood_data):
 
 # Initialize database
 print("============================================================")
-print(" MOODLY MENTAL HEALTH API")
+print(" MOODLY MENTAL HEALTH API - PRODUCTION")
 print("============================================================")
 print(" Initializing application...")
 init_database()
 print(" Database ready")
+
+# Frontend serving routes
+@app.route('/')
+def serve_index():
+    """Serve the React app"""
+    if os.path.exists('dist/index.html'):
+        return send_file('dist/index.html')
+    else:
+        return jsonify({
+            'message': 'Moodly API is running',
+            'status': 'success',
+            'version': '1.0.0',
+            'note': 'Frontend not built yet'
+        })
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files"""
+    if os.path.exists(f'dist/{path}'):
+        return send_from_directory('dist', path)
+    else:
+        # For SPA routing, return index.html for non-API routes
+        if not path.startswith('api/'):
+            if os.path.exists('dist/index.html'):
+                return send_file('dist/index.html')
+        return jsonify({'error': 'File not found'}), 404
 
 # API Routes
 @app.route('/api/health')
@@ -591,8 +617,7 @@ def get_analytics():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(" Starting Flask development server...")
+    print(" Starting Flask production server...")
     print(f" Server will be available at: http://localhost:{port}")
-    print(" Alternative URL: http://127.0.0.1:5000")
     print("============================================================")
     app.run(debug=False, host='0.0.0.0', port=port)

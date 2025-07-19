@@ -1,1 +1,1 @@
-﻿web: gunicorn moodly_app:app
+﻿web: python app.py

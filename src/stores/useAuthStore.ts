@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import config from '../config';
 
 interface User {
   id: number;
@@ -21,7 +22,7 @@ interface AuthState {
   updateUser: (updates: Partial<User>) => void;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = config.API_BASE_URL;
 
 export const useAuthStore = create<AuthState>()(
   persist(
