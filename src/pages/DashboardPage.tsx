@@ -15,23 +15,17 @@ import {
   Smile,
   Meh,
   Frown,
-  Activity
+  Activity,
+  Battery,
+  Shield,
+  Moon
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useMoodStore } from '@/stores/useMoodStore';
 
-const moodIcons = {
-  happy: Smile,
-  calm: Heart,
-  anxious: Meh,
-  sad: Frown,
-  angry: Frown,
-  excited: Smile,
-};
-
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
-  const { entries, loadEntries, getMoodStats } = useMoodStore();
+  const { entries, loadEntries, getMoodStats, isLoading } = useMoodStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,22 +33,25 @@ export default function DashboardPage() {
       navigate('/login');
       return;
     }
+    // Load mood entries when user is authenticated
     loadEntries();
   }, [isAuthenticated, navigate, loadEntries]);
 
   const stats = getMoodStats();
   const recentEntries = entries.slice(0, 3);
 
-  const getMoodColor = (mood: string) => {
-    const colors = {
-      happy: 'text-mood-happy',
-      calm: 'text-mood-calm',
-      anxious: 'text-mood-anxious',
-      sad: 'text-mood-sad',
-      angry: 'text-mood-angry',
-      excited: 'text-mood-excited',
-    };
-    return colors[mood as keyof typeof colors] || 'text-muted-foreground';
+  const getMoodIcon = (mood: number) => {
+    if (mood >= 8) return Smile;
+    if (mood >= 6) return Heart;
+    if (mood >= 4) return Meh;
+    return Frown;
+  };
+
+  const getMoodColor = (mood: number) => {
+    if (mood >= 8) return 'text-green-500';
+    if (mood >= 6) return 'text-blue-500';
+    if (mood >= 4) return 'text-yellow-500';
+    return 'text-red-500';
   };
 
   const getTrendColor = (trend: string) => {
@@ -144,27 +141,43 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentEntries.length > 0 ? recentEntries.map((entry) => {
-                const IconComponent = moodIcons[entry.mood_description as keyof typeof moodIcons] || Heart;
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <Activity className="w-8 h-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+                  <p className="text-muted-foreground">Loading mood entries...</p>
+                </div>
+              ) : recentEntries.length > 0 ? recentEntries.map((entry) => {
+                const IconComponent = getMoodIcon(entry.mood);
                 return (
                   <div key={entry.id} className="flex items-start gap-4 p-4 rounded-lg bg-muted/30">
-                    <div className={`p-2 rounded-full bg-background ${getMoodColor(entry.mood_description)}`}>
+                    <div className={`p-2 rounded-full bg-background ${getMoodColor(entry.mood)}`}>
                       <IconComponent className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary" className="text-xs">
-                          {entry.mood_score}/10
+                          Mood: {entry.mood}/10
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          <Battery className="w-3 h-3 mr-1" />
+                          Energy: {entry.energy}/10
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(entry.created_at).toLocaleDateString()}
+                          {new Date(entry.date).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="text-sm font-medium capitalize mb-1">
-                        {entry.mood_description}
-                      </p>
+                      <div className="flex items-center gap-4 mb-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Shield className="w-3 h-3" />
+                          Anxiety: {entry.anxiety}/10
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Moon className="w-3 h-3" />
+                          Sleep: {entry.sleep}h
+                        </span>
+                      </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">
-                        {entry.entry_text}
+                        {entry.notes}
                       </p>
                     </div>
                   </div>

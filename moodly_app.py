@@ -1,14 +1,30 @@
 ﻿# Moodly Mental Health App - Flask Application
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import hashlib
 import os
 from datetime import datetime, timedelta
 import secrets
 from dotenv import load_dotenv
+from openai import OpenAI
 
 # Load environment variables
 load_dotenv()
+
+# Initialize OpenAI
+openai_api_key = os.environ.get('OPENAI_API_KEY')
+openai_client = None
+if openai_api_key:
+    try:
+        openai_client = OpenAI(api_key=openai_api_key)
+        print("✅ OpenAI client initialized successfully!")
+    except Exception as e:
+        print(f"⚠️ OpenAI initialization failed: {e}")
+        openai_client = None
+else:
+    print("⚠️ OpenAI API key not found - AI features will be disabled")
 
 # Create Flask application instance
 app = Flask(__name__)
@@ -152,11 +168,22 @@ def get_recent_moods(user_id, limit=5):
 # Routes
 @app.route('/')
 def index():
-    """Home page"""
+    """API info page"""
     user = get_current_user()
     if user:
-        return redirect(url_for('dashboard'))
-    return render_template('index.html')
+        return jsonify({
+            'message': 'Moodly API is running',
+            'status': 'success',
+            'user': {'id': user[0], 'username': user[1], 'email': user[2]},
+            'version': '1.0.0',
+            'ai_enabled': openai_client is not None
+        })
+    return jsonify({
+        'message': 'Moodly API is running',
+        'status': 'success',
+        'version': '1.0.0',
+        'ai_enabled': openai_client is not None
+    })
 
 @app.route('/dashboard')
 def dashboard():
@@ -836,6 +863,309 @@ def health_check():
         'version': '1.0.0',
         'timestamp': datetime.now().isoformat()
     })
+
+# ============================================================================
+# API ENDPOINTS FOR REACT FRONTEND
+# ============================================================================
+
+# Enable CORS for React development server
+CORS(app, origins=['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8081', 'http://127.0.0.1:8081', 'http://localhost:8082', 'http://127.0.0.1:8082', 'http://localhost:8083', 'http://127.0.0.1:8083'])
+
+def get_connection():
+    """Get database connection with proper error handling"""
+    try:
+        connection = sqlite3.connect(DATABASE_PATH)
+        return connection
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        return None
+
+def analyze_mood_with_ai(mood_data):
+    """Generate AI insights for mood entry using OpenAI"""
+    if not openai_client:
+        return "AI insights temporarily unavailable. Focus on patterns in your mood, energy, and sleep to understand your well-being better."
+    
+    try:
+        # Prepare mood context for AI analysis
+        mood_context = f"""
+        User's mood data:
+        - Mood level: {mood_data.get('mood', 5)}/10
+        - Energy level: {mood_data.get('energy', 5)}/10
+        - Anxiety level: {mood_data.get('anxiety', 5)}/10
+        - Sleep hours: {mood_data.get('sleep', 8)} hours
+        - Notes: {mood_data.get('notes', 'No notes provided')}
+        """
+        
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are a compassionate mental health assistant. Provide brief, supportive insights (2-3 sentences) about the user's mood patterns. Focus on positive reinforcement and gentle suggestions. Avoid medical advice."
+                },
+                {
+                    "role": "user", 
+                    "content": mood_context
+                }
+            ],
+            max_tokens=150,
+            temperature=0.7
+        )
+        
+        insight = response.choices[0].message.content.strip()
+        return insight
+        
+    except Exception as e:
+        print(f"AI analysis error: {e}")
+        return "Your mood tracking is valuable for understanding patterns. Consider how sleep and daily activities might influence your energy and emotional well-being."
+
+@app.route('/api/signup', methods=['POST'])
+def api_signup():
+    """API endpoint for user registration"""
+    try:
+        data = request.json
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not all([username, email, password]):
+            return jsonify({'error': 'Missing required fields'}), 400
+            
+        connection = get_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+            
+        cursor = connection.cursor()
+        
+        # Check if user already exists
+        cursor.execute("SELECT id FROM users WHERE email = ? OR username = ?", (email, username))
+        if cursor.fetchone():
+            return jsonify({'error': 'User already exists'}), 409
+            
+        # Create new user
+        hashed_password = generate_password_hash(password)
+        cursor.execute("""
+            INSERT INTO users (username, email, password_hash, created_at)
+            VALUES (?, ?, ?, datetime('now'))
+        """, (username, email, hashed_password))
+        
+        user_id = cursor.lastrowid
+        connection.commit()
+        connection.close()
+        
+        return jsonify({
+            'message': 'User created successfully',
+            'user': {
+                'id': user_id,
+                'username': username,
+                'email': email
+            }
+        }), 201
+        
+    except Exception as e:
+        print(f"Signup error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """API endpoint for user authentication"""
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not all([email, password]):
+            return jsonify({'error': 'Missing email or password'}), 400
+            
+        connection = get_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+            
+        cursor = connection.cursor()
+        cursor.execute("SELECT id, username, email, password_hash FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        connection.close()
+        
+        if not user or not check_password_hash(user[3], password):
+            return jsonify({'error': 'Invalid credentials'}), 401
+            
+        return jsonify({
+            'message': 'Login successful',
+            'user': {
+                'id': user[0],
+                'username': user[1],
+                'email': user[2]
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/mood-entries', methods=['GET'])
+def api_get_mood_entries():
+    """Get mood entries for authenticated user"""
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+            
+        connection = get_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+            
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT id, mood_rating, energy_level, anxiety_level, sleep_hours, 
+                   notes, ai_insights, created_at
+            FROM mood_entries 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+        """, (user_id,))
+        
+        entries = []
+        for row in cursor.fetchall():
+            entries.append({
+                'id': row[0],
+                'mood': row[1],
+                'energy': row[2],
+                'anxiety': row[3],
+                'sleep': row[4],
+                'notes': row[5],
+                'ai_insights': row[6],
+                'date': row[7]
+            })
+            
+        connection.close()
+        return jsonify({'entries': entries}), 200
+        
+    except Exception as e:
+        print(f"Get mood entries error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/mood-entries', methods=['POST'])
+def api_add_mood_entry():
+    """Add new mood entry for authenticated user with AI insights"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+            
+        # Generate AI insights for the mood entry
+        ai_insights = analyze_mood_with_ai(data)
+            
+        connection = get_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+            
+        cursor = connection.cursor()
+        cursor.execute("""
+            INSERT INTO mood_entries 
+            (user_id, mood_rating, energy_level, anxiety_level, sleep_hours, notes, ai_insights, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        """, (
+            user_id,
+            data.get('mood', 5),
+            data.get('energy', 5),
+            data.get('anxiety', 5),
+            data.get('sleep', 8),
+            data.get('notes', ''),
+            ai_insights
+        ))
+        
+        entry_id = cursor.lastrowid
+        connection.commit()
+        connection.close()
+        
+        return jsonify({
+            'message': 'Mood entry added successfully',
+            'entry_id': entry_id,
+            'ai_insights': ai_insights
+        }), 201
+        
+    except Exception as e:
+        print(f"Add mood entry error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    """Health check endpoint"""
+    return jsonify({'status': 'healthy', 'message': 'Moodly API is running'}), 200
+
+@app.route('/api/ai-insights', methods=['POST'])
+def api_generate_insights():
+    """Generate AI insights for user's mood patterns"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+            
+        connection = get_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+            
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT mood_rating, energy_level, anxiety_level, sleep_hours, notes, created_at
+            FROM mood_entries 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+            LIMIT 10
+        """, (user_id,))
+        
+        recent_entries = cursor.fetchall()
+        connection.close()
+        
+        if not recent_entries:
+            return jsonify({'insights': 'Start tracking your mood to receive personalized insights!'}), 200
+        
+        # Prepare context for AI analysis
+        mood_patterns = []
+        for entry in recent_entries:
+            mood_patterns.append({
+                'mood': entry[0],
+                'energy': entry[1], 
+                'anxiety': entry[2],
+                'sleep': entry[3],
+                'date': entry[5]
+            })
+        
+        if not openai_client:
+            return jsonify({'insights': 'AI insights temporarily unavailable. Your mood tracking shows consistent patterns - keep up the great work!'}), 200
+        
+        try:
+            patterns_text = f"Recent mood patterns (last 10 entries): {mood_patterns}"
+            
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a supportive mental health assistant. Analyze mood patterns and provide encouraging, actionable insights in 3-4 sentences. Focus on positive trends and gentle suggestions for improvement. Avoid medical advice."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Please analyze these mood patterns and provide supportive insights: {patterns_text}"
+                    }
+                ],
+                max_tokens=200,
+                temperature=0.7
+            )
+            
+            insights = response.choices[0].message.content.strip()
+            return jsonify({'insights': insights}), 200
+            
+        except Exception as e:
+            print(f"AI insights error: {e}")
+            return jsonify({'insights': 'Your consistent mood tracking is building valuable self-awareness. Look for patterns between your sleep, energy, and mood to optimize your well-being.'}), 200
+        
+    except Exception as e:
+        print(f"Generate insights error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 # Error handlers
 @app.errorhandler(404)

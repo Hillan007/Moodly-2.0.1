@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
   profile_picture?: string;
@@ -21,6 +21,8 @@ interface AuthState {
   updateUser: (updates: Partial<User>) => void;
 }
 
+const API_BASE_URL = 'http://localhost:5000/api';
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -31,22 +33,39 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true });
         try {
-          // TODO: Replace with actual API call
-          const mockUser: User = {
-            id: '1',
-            username: 'demo_user',
-            email,
-            mood_streak: 5,
-            created_at: new Date().toISOString(),
-          };
-          
-          set({ 
-            user: mockUser, 
-            isAuthenticated: true, 
-            isLoading: false 
+          const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ username: email, password }),
           });
-          return true;
+
+          if (response.ok) {
+            const data = await response.json();
+            const user: User = {
+              id: data.user.id,
+              username: data.user.username,
+              email: data.user.email,
+              mood_streak: 0, // Will be calculated from mood entries
+              created_at: new Date().toISOString(),
+            };
+            
+            set({ 
+              user, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+            return true;
+          } else {
+            const errorData = await response.json();
+            console.error('Login failed:', errorData.error);
+            set({ isLoading: false });
+            return false;
+          }
         } catch (error) {
+          console.error('Login error:', error);
           set({ isLoading: false });
           return false;
         }
@@ -55,32 +74,58 @@ export const useAuthStore = create<AuthState>()(
       signup: async (username: string, email: string, password: string) => {
         set({ isLoading: true });
         try {
-          // TODO: Replace with actual API call
-          const mockUser: User = {
-            id: '1',
-            username,
-            email,
-            mood_streak: 0,
-            created_at: new Date().toISOString(),
-          };
-          
-          set({ 
-            user: mockUser, 
-            isAuthenticated: true, 
-            isLoading: false 
+          const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ username, email, password }),
           });
-          return true;
+
+          if (response.ok) {
+            const data = await response.json();
+            const user: User = {
+              id: data.user.id,
+              username: data.user.username,
+              email: data.user.email,
+              mood_streak: 0,
+              created_at: new Date().toISOString(),
+            };
+            
+            set({ 
+              user, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+            return true;
+          } else {
+            const errorData = await response.json();
+            console.error('Signup failed:', errorData.error);
+            set({ isLoading: false });
+            return false;
+          }
         } catch (error) {
+          console.error('Signup error:', error);
           set({ isLoading: false });
           return false;
         }
       },
 
-      logout: () => {
-        set({ 
-          user: null, 
-          isAuthenticated: false 
-        });
+      logout: async () => {
+        try {
+          await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          set({ 
+            user: null, 
+            isAuthenticated: false 
+          });
+        }
       },
 
       updateUser: (updates: Partial<User>) => {
