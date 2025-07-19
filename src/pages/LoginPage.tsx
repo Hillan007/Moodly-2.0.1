@@ -22,12 +22,12 @@ export default function LoginPage() {
       return;
     }
 
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       toast.success('Welcome back!');
       navigate('/dashboard');
     } else {
-      toast.error('Invalid email or password');
+      toast.error(result.error || 'Invalid email or password');
     }
   };
 

@@ -18,7 +18,9 @@ import {
   Activity,
   Battery,
   Shield,
-  Moon
+  Moon,
+  Music,
+  ExternalLink
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useMoodStore } from '@/stores/useMoodStore';
@@ -287,6 +289,60 @@ export default function DashboardPage() {
                 Consider maintaining your current sleep schedule and social activities, 
                 as they appear to positively impact your wellbeing.
               </p>
+            </CardContent>
+          </Card>
+
+          {/* Music for Your Mood */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Music className="w-5 h-5" />
+                  Music for Your Mood
+                </CardTitle>
+                <CardDescription>Personalized music recommendations</CardDescription>
+              </div>
+              <Button onClick={() => navigate('/music')} size="sm" variant="outline">
+                <Music className="w-4 h-4 mr-2" />
+                Explore
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {recentEntries.length > 0 ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Based on your recent mood (
+                    <span className="font-medium">{recentEntries[0].mood}/10</span>
+                    ), we suggest calming playlists to enhance your wellbeing.
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Peaceful Vibes</p>
+                        <p className="text-xs text-muted-foreground">Curated calming tracks</p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">Curated</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">Mood Boost</p>
+                        <p className="text-xs text-muted-foreground">Uplifting melodies</p>
+                      </div>
+                      <Badge variant="default" className="text-xs">Spotify</Badge>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Music className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Log your mood to get personalized music recommendations
+                  </p>
+                  <Button onClick={() => navigate('/mood-tracker')} size="sm">
+                    Log Your Mood
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

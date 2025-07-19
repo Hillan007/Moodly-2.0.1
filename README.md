@@ -47,6 +47,15 @@ Moodly is more than just a mood tracker - it's your complete mental health compa
 - **Milestone Tracking**: Break down goals into achievable steps
 - **Progress Visualization**: See your journey towards better mental health
 
+### 🎵 **Mood-Based Music Recommendations**
+- **Spotify Integration**: Real-time music search based on your emotional state
+- **Fallback Playlists**: 25+ curated playlists across 5 mood categories
+- **Hybrid Mode**: Both Spotify and curated recommendations for comprehensive choice
+- **Emotional Categories**: Music for very happy, happy, neutral, low, and very low moods
+- **Anxiety Support**: Specialized playlists for anxiety management
+- **Instant Access**: Get music recommendations immediately after logging your mood
+- **Dashboard Integration**: Quick music suggestions on your wellness dashboard
+
 ### 👤 **Personalized Profile Management**
 - **User Statistics**: Track your wellness journey metrics
 - **Custom Preferences**: Personalize app experience
@@ -101,6 +110,13 @@ Moodly is more than just a mood tracker - it's your complete mental health compa
 - **SQLite** database for reliable data storage
 - **Flask-CORS** for secure cross-origin requests
 - **Werkzeug** for password hashing and security
+- **OpenAI GPT-3.5** for AI-powered mood insights
+- **Spotify Web API** for real-time music recommendations
+
+### **Third-Party Integrations**
+- **Spotify API**: Client credentials flow for music search
+- **OpenAI API**: Intelligent mood analysis and insights
+- **Fallback Systems**: Robust offline functionality
 
 ### **Development Features**
 - **TypeScript** for enhanced developer experience

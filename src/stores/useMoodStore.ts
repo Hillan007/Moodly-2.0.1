@@ -48,7 +48,7 @@ export const useMoodStore = create<MoodState>()(
         }
 
         try {
-          const response = await fetch(`${API_BASE_URL}/moods`, {
+          const response = await fetch(`${API_BASE_URL}/api/moods`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export const useMoodStore = create<MoodState>()(
 
         set({ isLoading: true });
         try {
-          const response = await fetch(`${API_BASE_URL}/moods`, {
+          const response = await fetch(`${API_BASE_URL}/api/moods`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',

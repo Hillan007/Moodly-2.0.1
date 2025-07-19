@@ -15,6 +15,7 @@ import JournalPage from '@/pages/JournalPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import BreathingPage from '@/pages/BreathingPage';
 import GoalsPage from '@/pages/GoalsPage';
+import MusicPage from '@/pages/MusicPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="breathing" element={<BreathingPage />} />
             <Route path="goals" element={<GoalsPage />} />
+            <Route path="music" element={<MusicPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="*" element={<NotFound />} />
           </Route>

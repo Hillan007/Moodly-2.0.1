@@ -8,6 +8,8 @@ import os
 import sqlite3
 import hashlib
 import secrets
+import requests
+import base64
 from datetime import datetime, timedelta
 from flask import Flask, request, session, jsonify, send_from_directory, send_file
 from flask_cors import CORS
@@ -26,6 +28,49 @@ if openai_api_key:
 else:
     print("⚠️ OpenAI API key not found - AI features will be disabled")
 
+# Initialize Spotify
+spotify_client_id = os.environ.get('SPOTIFY_CLIENT_ID')
+spotify_client_secret = os.environ.get('SPOTIFY_CLIENT_SECRET')
+spotify_access_token = None
+
+def get_spotify_token():
+    """Get Spotify access token using Client Credentials flow"""
+    global spotify_access_token
+    
+    if not spotify_client_id or not spotify_client_secret:
+        return None
+    
+    try:
+        # Encode client credentials
+        credentials = base64.b64encode(f"{spotify_client_id}:{spotify_client_secret}".encode()).decode()
+        
+        headers = {
+            'Authorization': f'Basic {credentials}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        data = {'grant_type': 'client_credentials'}
+        
+        response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
+        
+        if response.status_code == 200:
+            token_data = response.json()
+            spotify_access_token = token_data['access_token']
+            print("✅ Spotify client initialized successfully!")
+            return spotify_access_token
+        else:
+            print(f"⚠️ Spotify token request failed: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"⚠️ Spotify initialization failed: {e}")
+        return None
+
+# Initialize Spotify on startup
+if spotify_client_id and spotify_client_secret:
+    get_spotify_token()
+else:
+    print("⚠️ Spotify credentials not found - Music features will use fallback playlists")
+
 # Create Flask application instance
 app = Flask(__name__, static_folder='dist', static_url_path='')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in-production')
@@ -33,8 +78,12 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in
 # Configure CORS for production
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["*"],  # In production, you might want to restrict this
-        "supports_credentials": True
+        "origins": ["http://localhost:3000", "http://localhost:8084", "http://localhost:5173"],
+        "supports_credentials": True,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["Content-Type"],
+        "max_age": 86400
     }
 })
 
@@ -146,7 +195,251 @@ def get_current_user():
         return dict(user)
     return None
 
-def get_fallback_insight(mood_data):
+def get_fallback_music_recommendations(mood_score, energy_level=5, anxiety_level=5):
+    """Get fallback music recommendations based on mood patterns"""
+    
+    # Define music recommendations based on mood ranges
+    music_recommendations = {
+        'very_happy': {
+            'mood_range': (8, 10),
+            'playlists': [
+                {'name': 'Happy Hits', 'description': 'Upbeat songs to match your great mood!', 'tracks': [
+                    {'name': 'Happy', 'artist': 'Pharrell Williams', 'genre': 'Pop'},
+                    {'name': 'Can\'t Stop the Feeling!', 'artist': 'Justin Timberlake', 'genre': 'Pop'},
+                    {'name': 'Walking on Sunshine', 'artist': 'Katrina and the Waves', 'genre': 'Pop'},
+                    {'name': 'Good as Hell', 'artist': 'Lizzo', 'genre': 'Pop'},
+                    {'name': 'Shake It Off', 'artist': 'Taylor Swift', 'genre': 'Pop'}
+                ]},
+                {'name': 'Feel-Good Classics', 'description': 'Timeless feel-good songs', 'tracks': [
+                    {'name': 'Don\'t Worry Be Happy', 'artist': 'Bobby McFerrin', 'genre': 'Reggae'},
+                    {'name': 'Three Little Birds', 'artist': 'Bob Marley', 'genre': 'Reggae'},
+                    {'name': 'I Got You (I Feel Good)', 'artist': 'James Brown', 'genre': 'Funk'},
+                    {'name': 'Good Vibrations', 'artist': 'The Beach Boys', 'genre': 'Pop'},
+                    {'name': 'Mr. Blue Sky', 'artist': 'Electric Light Orchestra', 'genre': 'Rock'}
+                ]}
+            ]
+        },
+        'happy': {
+            'mood_range': (6, 7),
+            'playlists': [
+                {'name': 'Positive Vibes', 'description': 'Keep that positive energy flowing', 'tracks': [
+                    {'name': 'Good 4 U', 'artist': 'Olivia Rodrigo', 'genre': 'Pop'},
+                    {'name': 'Levitating', 'artist': 'Dua Lipa', 'genre': 'Pop'},
+                    {'name': 'Sunflower', 'artist': 'Post Malone, Swae Lee', 'genre': 'Hip-Hop'},
+                    {'name': 'Uptown Funk', 'artist': 'Mark Ronson ft. Bruno Mars', 'genre': 'Funk'},
+                    {'name': 'Count on Me', 'artist': 'Bruno Mars', 'genre': 'Pop'}
+                ]},
+                {'name': 'Acoustic Good Mood', 'description': 'Gentle uplifting acoustic songs', 'tracks': [
+                    {'name': 'Better Days', 'artist': 'OneRepublic', 'genre': 'Pop'},
+                    {'name': 'Riptide', 'artist': 'Vance Joy', 'genre': 'Indie'},
+                    {'name': 'Budapest', 'artist': 'George Ezra', 'genre': 'Folk'},
+                    {'name': 'Home', 'artist': 'Edward Sharpe & The Magnetic Zeros', 'genre': 'Indie'},
+                    {'name': 'I\'m Yours', 'artist': 'Jason Mraz', 'genre': 'Pop'}
+                ]}
+            ]
+        },
+        'neutral': {
+            'mood_range': (4, 5),
+            'playlists': [
+                {'name': 'Gentle Focus', 'description': 'Calm songs for a balanced mood', 'tracks': [
+                    {'name': 'Weightless', 'artist': 'Marconi Union', 'genre': 'Ambient'},
+                    {'name': 'Clair de Lune', 'artist': 'Claude Debussy', 'genre': 'Classical'},
+                    {'name': 'Mad World', 'artist': 'Gary Jules', 'genre': 'Alternative'},
+                    {'name': 'The Night We Met', 'artist': 'Lord Huron', 'genre': 'Indie'},
+                    {'name': 'Holocene', 'artist': 'Bon Iver', 'genre': 'Indie'}
+                ]},
+                {'name': 'Lo-Fi Chill', 'description': 'Relaxing background music', 'tracks': [
+                    {'name': 'Lovely', 'artist': 'Billie Eilish & Khalid', 'genre': 'Pop'},
+                    {'name': 'Golden', 'artist': 'Harry Styles', 'genre': 'Pop'},
+                    {'name': 'Sunset Lover', 'artist': 'Petit Biscuit', 'genre': 'Electronic'},
+                    {'name': 'Ocean Eyes', 'artist': 'Billie Eilish', 'genre': 'Pop'},
+                    {'name': 'Skinny Love', 'artist': 'Bon Iver', 'genre': 'Indie'}
+                ]}
+            ]
+        },
+        'low': {
+            'mood_range': (2, 3),
+            'playlists': [
+                {'name': 'Healing Sounds', 'description': 'Gentle music for tough times', 'tracks': [
+                    {'name': 'Breathe Me', 'artist': 'Sia', 'genre': 'Pop'},
+                    {'name': 'The Sound of Silence', 'artist': 'Simon & Garfunkel', 'genre': 'Folk'},
+                    {'name': 'Hurt', 'artist': 'Johnny Cash', 'genre': 'Country'},
+                    {'name': 'Black', 'artist': 'Pearl Jam', 'genre': 'Rock'},
+                    {'name': 'Tears in Heaven', 'artist': 'Eric Clapton', 'genre': 'Rock'}
+                ]},
+                {'name': 'Hope & Comfort', 'description': 'Songs of resilience and hope', 'tracks': [
+                    {'name': 'Stronger', 'artist': 'Kelly Clarkson', 'genre': 'Pop'},
+                    {'name': 'Fight Song', 'artist': 'Rachel Platten', 'genre': 'Pop'},
+                    {'name': 'Unwritten', 'artist': 'Natasha Bedingfield', 'genre': 'Pop'},
+                    {'name': 'Brave', 'artist': 'Sara Bareilles', 'genre': 'Pop'},
+                    {'name': 'Roar', 'artist': 'Katy Perry', 'genre': 'Pop'}
+                ]}
+            ]
+        },
+        'very_low': {
+            'mood_range': (0, 1),
+            'playlists': [
+                {'name': 'Gentle Support', 'description': 'Soft, comforting music for difficult moments', 'tracks': [
+                    {'name': 'Mad About You', 'artist': 'Sting', 'genre': 'Pop'},
+                    {'name': 'The Way You Look Tonight', 'artist': 'Frank Sinatra', 'genre': 'Jazz'},
+                    {'name': 'What a Wonderful World', 'artist': 'Louis Armstrong', 'genre': 'Jazz'},
+                    {'name': 'Here Comes the Sun', 'artist': 'The Beatles', 'genre': 'Rock'},
+                    {'name': 'Lean on Me', 'artist': 'Bill Withers', 'genre': 'Soul'}
+                ]},
+                {'name': 'Meditation & Peace', 'description': 'Calming instrumental music', 'tracks': [
+                    {'name': 'Gymnopédie No. 1', 'artist': 'Erik Satie', 'genre': 'Classical'},
+                    {'name': 'Spiegel im Spiegel', 'artist': 'Arvo Pärt', 'genre': 'Classical'},
+                    {'name': 'On Earth as It Is in Heaven', 'artist': 'Ólafur Arnalds', 'genre': 'Ambient'},
+                    {'name': 'Experience', 'artist': 'Ludovico Einaudi', 'genre': 'Neoclassical'},
+                    {'name': 'River Flows in You', 'artist': 'Yiruma', 'genre': 'Piano'}
+                ]}
+            ]
+        }
+    }
+    
+    # Special considerations for anxiety
+    if anxiety_level >= 7:
+        anxiety_playlist = {
+            'name': 'Anxiety Relief',
+            'description': 'Calming music to help reduce anxiety',
+            'tracks': [
+                {'name': 'Weightless', 'artist': 'Marconi Union', 'genre': 'Ambient'},
+                {'name': 'Electra', 'artist': 'Airstream', 'genre': 'Ambient'},
+                {'name': 'Mellomaniac (Chill Out Mix)', 'artist': 'DJ Shah', 'genre': 'Chillout'},
+                {'name': 'Watermark', 'artist': 'Enya', 'genre': 'New Age'},
+                {'name': 'Strawberry Swing', 'artist': 'Coldplay', 'genre': 'Rock'}
+            ]
+        }
+    
+    # Find the appropriate mood category
+    for category, data in music_recommendations.items():
+        mood_range = data['mood_range']
+        if mood_range[0] <= mood_score <= mood_range[1]:
+            playlists = data['playlists'].copy()
+            
+            # Add anxiety-specific playlist if needed
+            if anxiety_level >= 7:
+                playlists.insert(0, anxiety_playlist)
+            
+            return {
+                'mood_category': category,
+                'mood_score': mood_score,
+                'playlists': playlists,
+                'source': 'fallback',
+                'message': 'Music recommendations based on your mood patterns'
+            }
+    
+    # Default fallback
+    return {
+        'mood_category': 'neutral',
+        'mood_score': mood_score,
+        'playlists': music_recommendations['neutral']['playlists'],
+        'source': 'fallback',
+        'message': 'Default music recommendations'
+    }
+
+def search_spotify_music(mood_score, energy_level=5, anxiety_level=5):
+    """Search Spotify for mood-based music recommendations"""
+    global spotify_access_token
+    
+    if not spotify_access_token:
+        # Try to refresh token
+        spotify_access_token = get_spotify_token()
+        if not spotify_access_token:
+            return None
+    
+    try:
+        # Define search queries based on mood
+        search_queries = []
+        
+        if mood_score >= 8:
+            search_queries = ['happy music', 'feel good hits', 'upbeat pop']
+        elif mood_score >= 6:
+            search_queries = ['positive vibes', 'good mood music', 'uplifting songs']
+        elif mood_score >= 4:
+            search_queries = ['chill music', 'relaxing songs', 'acoustic']
+        elif mood_score >= 2:
+            search_queries = ['healing music', 'emotional songs', 'comfort music']
+        else:
+            search_queries = ['meditation music', 'calm instrumental', 'peaceful']
+        
+        # Special handling for anxiety
+        if anxiety_level >= 7:
+            search_queries = ['anxiety relief music', 'calming sounds', 'meditation']
+        
+        headers = {
+            'Authorization': f'Bearer {spotify_access_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        all_playlists = []
+        
+        for query in search_queries[:2]:  # Limit to 2 searches to avoid rate limits
+            # Search for playlists
+            search_url = f'https://api.spotify.com/v1/search'
+            params = {
+                'q': query,
+                'type': 'playlist',
+                'limit': 3
+            }
+            
+            response = requests.get(search_url, headers=headers, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                playlists = data['playlists']['items']
+                
+                for playlist in playlists:
+                    playlist_info = {
+                        'name': playlist['name'],
+                        'description': playlist['description'] or f'Spotify playlist for {query}',
+                        'spotify_url': playlist['external_urls']['spotify'],
+                        'image': playlist['images'][0]['url'] if playlist['images'] else None,
+                        'tracks_total': playlist['tracks']['total']
+                    }
+                    all_playlists.append(playlist_info)
+            else:
+                print(f"Spotify search failed: {response.status_code}")
+        
+        if all_playlists:
+            return {
+                'mood_category': 'spotify_recommendations',
+                'mood_score': mood_score,
+                'playlists': all_playlists,
+                'source': 'spotify',
+                'message': 'Music recommendations from Spotify'
+            }
+        else:
+            return None
+            
+    except Exception as e:
+        print(f"Spotify search error: {e}")
+        return None
+
+def get_music_recommendations(mood_score, energy_level=5, anxiety_level=5):
+    """Get music recommendations with Spotify API and fallback"""
+    
+    # Try Spotify first
+    spotify_recommendations = search_spotify_music(mood_score, energy_level, anxiety_level)
+    
+    if spotify_recommendations:
+        # Also get fallback recommendations for comparison
+        fallback_recommendations = get_fallback_music_recommendations(mood_score, energy_level, anxiety_level)
+        
+        return {
+            'primary': spotify_recommendations,
+            'fallback': fallback_recommendations,
+            'hybrid': True
+        }
+    else:
+        # Use fallback recommendations
+        fallback_recommendations = get_fallback_music_recommendations(mood_score, energy_level, anxiety_level)
+        
+        return {
+            'primary': fallback_recommendations,
+            'fallback': None,
+            'hybrid': False
+        }
     """Generate intelligent fallback insights based on mood data patterns"""
     mood_score = mood_data.get('mood_score', 5)
     energy_level = mood_data.get('energy_level', 5)
@@ -447,6 +740,13 @@ def handle_moods():
             'notes': notes
         })
         
+        # Generate music recommendations
+        music_recommendations = get_music_recommendations(
+            mood_score, 
+            energy_level or 5, 
+            anxiety_level or 5
+        )
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -469,6 +769,7 @@ def handle_moods():
                 'sleep_quality': sleep_quality,
                 'notes': notes,
                 'ai_insights': ai_insights,
+                'music_recommendations': music_recommendations,
                 'created_at': datetime.now().isoformat()
             }
         }), 201
@@ -578,6 +879,39 @@ def handle_goals():
             }
         }), 201
 
+@app.route('/api/music/recommendations', methods=['POST'])
+def get_music_for_mood():
+    """Get music recommendations based on mood data"""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    data = request.get_json()
+    mood_score = data.get('mood_score', 5)
+    energy_level = data.get('energy_level', 5)
+    anxiety_level = data.get('anxiety_level', 5)
+    
+    # Validate input
+    if not (0 <= mood_score <= 10):
+        return jsonify({'error': 'Mood score must be between 0 and 10'}), 400
+    
+    try:
+        recommendations = get_music_recommendations(mood_score, energy_level, anxiety_level)
+        
+        return jsonify({
+            'message': 'Music recommendations generated successfully',
+            'recommendations': recommendations,
+            'user_mood': {
+                'mood_score': mood_score,
+                'energy_level': energy_level,
+                'anxiety_level': anxiety_level
+            }
+        })
+        
+    except Exception as e:
+        print(f"Music recommendation error: {e}")
+        return jsonify({'error': 'Failed to generate music recommendations'}), 500
+
 @app.route('/api/analytics')
 def get_analytics():
     """Get user analytics"""
@@ -616,7 +950,7 @@ def get_analytics():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 3001))  # Changed from 5000 to 3001
     print(" Starting Flask production server...")
     print(f" Server will be available at: http://localhost:{port}")
     print("============================================================")

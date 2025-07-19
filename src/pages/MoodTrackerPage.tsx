@@ -6,6 +6,8 @@ import { Slider } from '@/components/ui/slider';
 import { Heart, Smile, Battery, Shield, Moon } from 'lucide-react';
 import { useMoodStore } from '@/stores/useMoodStore';
 import { toast } from 'sonner';
+import MusicRecommendations from '@/components/ui/music-recommendations';
+import config from '@/config';
 
 export default function MoodTrackerPage() {
   const [mood, setMood] = useState([5]);
@@ -13,6 +15,8 @@ export default function MoodTrackerPage() {
   const [anxiety, setAnxiety] = useState([5]);
   const [sleep, setSleep] = useState([8]);
   const [notes, setNotes] = useState('');
+  const [musicRecommendations, setMusicRecommendations] = useState(null);
+  const [isLoadingMusic, setIsLoadingMusic] = useState(false);
   const { addEntry } = useMoodStore();
 
   const handleSubmit = async () => {
@@ -31,6 +35,34 @@ export default function MoodTrackerPage() {
 
     if (success) {
       toast.success('Mood logged successfully!');
+      
+      // Fetch music recommendations based on the logged mood
+      setIsLoadingMusic(true);
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/api/music/recommendations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            mood_score: mood[0],
+            energy_level: energy[0],
+            anxiety_level: anxiety[0],
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setMusicRecommendations(data.recommendations);
+        }
+      } catch (error) {
+        console.error('Error fetching music recommendations:', error);
+      } finally {
+        setIsLoadingMusic(false);
+      }
+
+      // Reset form
       setMood([5]);
       setEnergy([5]);
       setAnxiety([5]);
@@ -149,6 +181,16 @@ export default function MoodTrackerPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Music Recommendations */}
+      {(musicRecommendations || isLoadingMusic) && (
+        <MusicRecommendations 
+          mood={mood[0]}
+          energy={energy[0]}
+          anxiety={anxiety[0]}
+          recommendations={musicRecommendations}
+        />
+      )}
     </div>
   );
 }

@@ -34,12 +34,12 @@ export default function SignupPage() {
       return;
     }
 
-    const success = await signup(username, email, password);
-    if (success) {
+    const result = await signup(username, email, password);
+    if (result.success) {
       toast.success('Account created successfully! Welcome to Moodly!');
       navigate('/dashboard');
     } else {
-      toast.error('Failed to create account. Please try again.');
+      toast.error(result.error || 'Failed to create account. Please try again.');
     }
   };
 

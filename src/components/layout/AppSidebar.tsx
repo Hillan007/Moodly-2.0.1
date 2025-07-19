@@ -3,6 +3,7 @@ import {
   Calendar,
   Heart,
   Home,
+  Music,
   PenTool,
   Target,
   TrendingUp,
@@ -59,6 +60,12 @@ const navigationItems = [
     url: '/goals',
     icon: Target,
     description: 'Set and track wellness goals'
+  },
+  {
+    title: 'Music',
+    url: '/music',
+    icon: Music,
+    description: 'Mood-based music recommendations'
   },
 ];
 
