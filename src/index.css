@@ -10,13 +10,13 @@ All colors MUST be HSL.
   :root {
     /* Mental health calming color palette */
     --background: 210 20% 98%;
-    --foreground: 213 27% 84%;
+    --foreground: 213 43.51% 49.22%; /* Updated to your specified color */
 
     --card: 0 0% 100%;
-    --card-foreground: 213 27% 84%;
+    --card-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 27% 84%;
+    --popover-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
 
     /* Calming blue-green primary */
     --primary: 192 75% 45%;
@@ -25,14 +25,14 @@ All colors MUST be HSL.
 
     /* Soft lavender secondary */
     --secondary: 260 15% 85%;
-    --secondary-foreground: 260 40% 25%;
+    --secondary-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
 
     --muted: 210 40% 95%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
 
     /* Gentle mint accent */
-    --accent: 120 25% 85%;
-    --accent-foreground: 120 40% 25%;
+    --accent: 120 55% 85%;
+    --accent-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
 
     --destructive: 0 65% 65%;
     --destructive-foreground: 0 0% 100%;
@@ -54,7 +54,7 @@ All colors MUST be HSL.
     /* Gradient backgrounds */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-calm: linear-gradient(135deg, hsl(192 75% 45%), hsl(192 75% 60%));
-    --gradient-wellness: linear-gradient(135deg, hsl(120 25% 85%), hsl(260 15% 85%));
+    --gradient-wellness: linear-gradient(135deg, hsl(120, 82%, 56%), hsl(262, 39%, 55%));
 
     /* Shadows for depth */
     --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
@@ -63,20 +63,13 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
+    --sidebar-background: 50 0% 98%;
+    --sidebar-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
     --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
+    --sidebar-primary-foreground: 60 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
+    --sidebar-accent-foreground: 213 43.51% 49.22%; /* Updated to your specified color */
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -127,4 +120,129 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Force overrides with maximum specificity */
+@layer utilities {
+  .text-custom-blue {
+    color: hsl(213deg 43.51% 49.22%) !important;
+  }
+  
+  .text-custom-blue-dark {
+    color: hsl(213deg 43.51% 35%) !important;
+  }
+  
+  .bg-custom-blue {
+    background-color: hsl(213deg 43.51% 49.22%) !important;
+  }
+  
+  .border-custom-blue {
+    border-color: hsl(213deg 43.51% 49.22%) !important;
+  }
+  
+  .font-bold-custom {
+    font-weight: 700 !important;
+  }
+  
+  .font-black-custom {
+    font-weight: 900 !important;
+  }
+
+  /* Force text visibility with highest specificity */
+  .dashboard-text,
+  div .dashboard-text,
+  p.dashboard-text,
+  span.dashboard-text {
+    color: hsl(213deg 43.51% 49.22%) !important;
+    font-weight: 700 !important;
+  }
+  
+  .dashboard-title,
+  div .dashboard-title,
+  h1.dashboard-title,
+  h2.dashboard-title,
+  h3.dashboard-title {
+    color: hsl(213deg 43.51% 49.22%) !important;
+    font-weight: 900 !important;
+  }
+
+  /* Navigation button overrides */
+  .nav-button,
+  button.nav-button,
+  .nav-button.nav-button {
+    color: hsl(213deg 43.51% 49.22%) !important;
+    font-weight: 700 !important;
+    border: 2px solid hsl(213deg 43.51% 49.22%) !important;
+  }
+  
+  .nav-button:hover,
+  button.nav-button:hover {
+    background-color: hsl(213deg 43.51% 90%) !important;
+    color: hsl(213deg 43.51% 30%) !important;
+  }
+
+  /* AI Insight card overrides */
+  .insight-card,
+  div.insight-card {
+    background-color: hsl(232, 49%, 59%) !important;
+    border: 3px solid hsl(213, 80%, 6%) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .insight-header,
+  div.insight-header {
+    background: linear-gradient(to right, hsl(214, 56%, 50%), hsl(213deg 43.51% 85%)) !important;
+    border-bottom: 2px solid hsl(213deg 43.51% 49.22%) !important;
+  }
+  
+  .insight-text,
+  p.insight-text,
+  div .insight-text {
+    color: hsl(213deg 43.51% 49.22%) !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    line-height: 1.75 !important;
+  }
+}
+
+/* Additional component-level overrides */
+[class*="text-custom-blue"] {
+  color: hsl(213deg 43.51% 49.22%) !important;
+}
+
+[class*="dashboard-"] {
+  color: hsl(213deg 43.51% 49.22%) !important;
+}
+
+/* Specific card content overrides */
+.space-y-8 h1 {
+  color: hsl(213deg 43.51% 49.22%) !important;
+  font-weight: 900 !important;
+}
+
+.space-y-8 p {
+  color: hsl(213deg 43.51% 49.22%) !important;
+  font-weight: 700 !important;
+}
+
+/* Card title overrides */
+[data-sonner-toast] h3,
+[class*="CardTitle"] {
+  color: hsl(213deg 43.51% 49.22%) !important;
+  font-weight: 700 !important;
+}
+
+[class*="CardDescription"] {
+  color: hsl(213deg 43.51% 49.22%) !important;
+  font-weight: 600 !important;
+}
+
+/* Button text overrides */
+[class*="Button"] {
+  font-weight: 700 !important;
+}
+
+/* Badge overrides */
+[class*="Badge"] {
+  font-weight: 700 !important;
 }

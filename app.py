@@ -950,8 +950,9 @@ def get_analytics():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 3001))  # Changed from 5000 to 3001
-    print(" Starting Flask production server...")
+    # Force port 3000 explicitly
+    port = 3000
+    print(f" Starting Flask server on port {port}...")
     print(f" Server will be available at: http://localhost:{port}")
     print("============================================================")
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)
