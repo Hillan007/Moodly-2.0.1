@@ -5,13 +5,17 @@ nixPkgs = ['nodejs_18', 'python311']
 dependsOn = ['setup']
 cmds = [
     'pip install -r requirements.txt',
-    'npm install',
-    'npm run build'
+    'npm install'
 ]
 
 [phases.build]
 dependsOn = ['install']
-cmds = ['echo "Build completed"']
+cmds = [
+    'npm run build',
+    'ls -la dist/',
+    'echo "Build completed - checking files:"',
+    'find dist -type f | head -10'
+]
 
 [start]
 cmd = 'python app.py'
