@@ -15,6 +15,15 @@ from flask import Flask, request, session, jsonify, send_from_directory, send_fi
 from flask_cors import CORS
 from openai import OpenAI
 
+app = Flask(__name__, static_folder='dist', static_url_path='/')
+
+# Update CORS for production
+CORS(app, origins=[
+    "https://yourusername.pythonanywhere.com",  # Replace with your PA domain
+    "http://localhost:3000",  # Keep for local development
+    "http://localhost:8084"   # Vite dev server
+])
+
 # Initialize OpenAI
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 openai_client = None
@@ -70,10 +79,6 @@ if spotify_client_id and spotify_client_secret:
     get_spotify_token()
 else:
     print("⚠️ Spotify credentials not found - Music features will use fallback playlists")
-
-# Create Flask application instance
-app = Flask(__name__, static_folder='dist', static_url_path='')
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in-production')
 
 # Configure CORS for production
 CORS(app, resources={
@@ -948,11 +953,3 @@ def get_analytics():
         'total_journal_entries': len([]),  # Can be expanded
         'total_goals': len([])  # Can be expanded
     })
-
-if __name__ == '__main__':
-    # Force port 3000 explicitly
-    port = 3000
-    print(f" Starting Flask server on port {port}...")
-    print(f" Server will be available at: http://localhost:{port}")
-    print("============================================================")
-    app.run(debug=True, host='0.0.0.0', port=port)

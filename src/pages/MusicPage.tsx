@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -431,3 +432,5 @@ const MusicPage: React.FC = () => {
 };
 
 export default MusicPage;
+=======
+>>>>>>> 02c6911 (nice work)
