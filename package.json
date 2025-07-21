@@ -3,15 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "postbuild": "ls -la dist/ && echo 'Build artifacts created'"
+    "build": "tsc --noEmit --skipLibCheck && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.2.0",
