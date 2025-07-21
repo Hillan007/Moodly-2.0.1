@@ -5,78 +5,18 @@ nixPkgs = ['nodejs_18', 'python311']
 dependsOn = ['setup']
 cmds = [
     'pip install -r requirements.txt',
-    'npm install --verbose',
-    'echo "Node modules installed"',
-    'ls -la node_modules/.bin/ | head -10'
+    'npm ci --verbose'
 ]
 
 [phases.build]
 dependsOn = ['install']
 cmds = [
     'echo "=== Starting React Build ==="',
-    'npm run build 2>&1 || echo "Build failed, creating fallback"',
-    'if [ ! -d "dist" ]; then echo "Creating fallback dist folder"; mkdir -p dist; fi',
-    'if [ ! -f "dist/index.html" ]; then echo "Creating fallback index.html"; cat > dist/index.html << EOF
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moodly - Mental Health Tracker</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .container { max-width: 800px; margin: 0 auto; text-align: center; }
-        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; backdrop-filter: blur(10px); margin: 20px 0; }
-        .btn { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; text-decoration: none; display: inline-block; margin: 10px; }
-        .btn:hover { background: #45a049; }
-        .feature { background: rgba(255,255,255,0.05); padding: 20px; margin: 10px; border-radius: 10px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h1>🧠 Moodly</h1>
-            <h2>Your Mental Health Companion</h2>
-            <p>Track your mood, analyze patterns, and improve your mental wellbeing</p>
-            <a href="/register" class="btn">Get Started</a>
-            <a href="/login" class="btn">Login</a>
-        </div>
-        
-        <div class="card">
-            <h3>✨ Features</h3>
-            <div class="feature">
-                <h4>📊 Mood Tracking</h4>
-                <p>Log and monitor your daily emotional state</p>
-            </div>
-            <div class="feature">
-                <h4>🤖 AI Insights</h4>
-                <p>Get personalized recommendations and analysis</p>
-            </div>
-            <div class="feature">
-                <h4>🎯 Goal Setting</h4>
-                <p>Set and achieve your mental health goals</p>
-            </div>
-            <div class="feature">
-                <h4>📈 Analytics</h4>
-                <p>Visualize your progress over time</p>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h3>🚀 System Status</h3>
-            <p>✅ Backend API: Running</p>
-            <p>✅ Database: Connected</p>
-            <p>✅ AI Services: Available</p>
-            <p><a href="/api/health" class="btn">Check API Health</a></p>
-        </div>
-    </div>
-</body>
-</html>
-EOF; fi',
-    'echo "=== Build Summary ==="',
+    'npm run build',
+    'echo "=== Build completed ==="',
     'ls -la dist/',
-    'echo "Files in dist:"',
-    'find dist -type f 2>/dev/null || echo "No files found in dist"'
+    'echo "Build artifacts:"',
+    'find dist -type f | head -20'
 ]
 
 [start]
