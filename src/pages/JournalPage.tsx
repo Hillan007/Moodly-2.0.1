@@ -13,7 +13,7 @@ import {
   Calendar,
   Heart,
   Bookmark,
-  BookmarkCheck,
+  BookmarkPlus,  // Changed from BookmarkPlus
   Edit,
   Trash2,
   Plus,
@@ -433,7 +433,7 @@ export default function JournalPage() {
                     onClick={() => toggleFavorite(entry.id)}
                   >
                     {entry.isFavorite ? (
-                      <BookmarkCheck className="w-4 h-4 text-yellow-500" />
+                      <BookmarkPlus className="w-4 h-4 text-yellow-500" />
                     ) : (
                       <Bookmark className="w-4 h-4" />
                     )}

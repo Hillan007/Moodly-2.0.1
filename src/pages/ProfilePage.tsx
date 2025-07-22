@@ -20,7 +20,7 @@ import {
   Trash2,
   Save
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {

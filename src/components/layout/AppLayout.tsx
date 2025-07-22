@@ -16,7 +16,7 @@ import {
   Wind,
   X 
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 
 const navigation = [

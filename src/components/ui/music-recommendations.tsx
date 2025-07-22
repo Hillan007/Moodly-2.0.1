@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Music, Play, Pause, Search, Heart, ExternalLink, Shuffle, Clock, Users } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
 import config from '@/config';
+import { useAuthStore } from '@/stores/authStore';
 
 // Enhanced curated playlists with Spotify URLs as fallback
 const CURATED_PLAYLISTS = [
@@ -245,7 +245,6 @@ const SPOTIFY_MOOD_PLAYLISTS = {
 };
 
 export default function MusicPage() {
-  const { user, token } = useAuthStore();
   const [playlists, setPlaylists] = useState(CURATED_PLAYLISTS);
   const [currentMood, setCurrentMood] = useState<string>('calm');
   const [isLoading, setIsLoading] = useState(false);

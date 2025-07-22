@@ -24,7 +24,7 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useMoodStore } from '@/stores/useMoodStore';
 import config from '@/config';
 
