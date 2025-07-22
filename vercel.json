@@ -1,6 +1,5 @@
 ﻿{
   "version": 2,
-  "name": "moodly-mental-health-app",
   "builds": [
     {
       "src": "api/**/*.py",
@@ -8,7 +7,10 @@
     },
     {
       "src": "package.json",
-      "use": "@vercel/node"
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
@@ -31,33 +33,6 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "FLASK_SECRET_KEY": "@flask_secret_key",
-    "OPENAI_API_KEY": "@openai_api_key",
-    "SPOTIFY_CLIENT_ID": "@spotify_client_id",
-    "SPOTIFY_CLIENT_SECRET": "@spotify_client_secret"
-  },
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
-      ]
     }
   ]
 }
