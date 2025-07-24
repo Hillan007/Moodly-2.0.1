@@ -13,10 +13,23 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+    minify: "esbuild",
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+        },
       },
     },
+  },
+  server: {
+    port: 5173,
+    host: true,
+    open: true,
+  },
+  preview: {
+    port: 4173,
+    host: true,
   },
 });

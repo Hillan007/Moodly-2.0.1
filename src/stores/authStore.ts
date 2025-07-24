@@ -1,155 +1,99 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { supabase } from '@/lib/supabase'
-import type { User } from '@supabase/supabase-js'
+import { create } from 'zustand';
+
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 interface Profile {
-  id: string
-  username?: string
-  email?: string
-  avatar_url?: string
-  mood_streak: number
+  username: string;
+  bio?: string;
+  avatar?: string;
 }
 
 interface AuthState {
-  user: User | null
-  profile: Profile | null
-  loading: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, username: string) => Promise<void>
-  signOut: () => Promise<void>
-  updateProfile: (updates: Partial<Profile>) => Promise<void>
-  fetchProfile: () => Promise<void>
+  user: User | null;
+  profile: Profile | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (userData: User) => void;
+  logout: () => void;
+  setProfile: (profile: Profile) => void;
+  checkAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  profile: null,
+  isAuthenticated: false,
+  isLoading: true,
+
+  login: (userData: User) => {
+    // Store in localStorage
+    localStorage.setItem('auth_token', 'demo_token_' + Date.now());
+    localStorage.setItem('user_session', JSON.stringify(userData));
+    
+    // Update store
+    set({
+      user: userData,
+      isAuthenticated: true,
+      isLoading: false,
+      profile: {
+        username: userData.name || userData.email.split('@')[0],
+        bio: 'Welcome to Moodly!'
+      }
+    });
+  },
+
+  logout: () => {
+    // Clear localStorage
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_session');
+    
+    // Clear store
+    set({
       user: null,
       profile: null,
-      loading: false,
+      isAuthenticated: false,
+      isLoading: false
+    });
+    
+    // Redirect to login
+    window.location.href = '/login';
+  },
 
-      signIn: async (email: string, password: string) => {
-        set({ loading: true })
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
-          
-          if (error) throw error
-          
-          set({ user: data.user })
-          await get().fetchProfile()
-        } catch (error) {
-          console.error('Sign in error:', error)
-          throw error
-        } finally {
-          set({ loading: false })
-        }
-      },
+  setProfile: (profile: Profile) => {
+    set({ profile });
+  },
 
-      signUp: async (email: string, password: string, username: string) => {
-        set({ loading: true })
-        try {
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-          })
-          
-          if (error) throw error
-          
-          if (data.user) {
-            // Create profile
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: data.user.id,
-                username,
-                email,
-                mood_streak: 0,
-              })
-            
-            if (profileError) throw profileError
-            
-            set({ user: data.user })
-            await get().fetchProfile()
+  checkAuth: () => {
+    const token = localStorage.getItem('auth_token');
+    const userSession = localStorage.getItem('user_session');
+
+    if (token && userSession) {
+      try {
+        const userData = JSON.parse(userSession);
+        set({
+          user: userData,
+          isAuthenticated: true,
+          isLoading: false,
+          profile: {
+            username: userData.name || userData.email.split('@')[0],
+            bio: 'Welcome to Moodly!'
           }
-        } catch (error) {
-          console.error('Sign up error:', error)
-          throw error
-        } finally {
-          set({ loading: false })
-        }
-      },
-
-      signOut: async () => {
-        try {
-          const { error } = await supabase.auth.signOut()
-          if (error) throw error
-          
-          set({ user: null, profile: null })
-        } catch (error) {
-          console.error('Sign out error:', error)
-          throw error
-        }
-      },
-
-      updateProfile: async (updates: Partial<Profile>) => {
-        const { user } = get()
-        if (!user) throw new Error('No user logged in')
-        
-        try {
-          const { error } = await supabase
-            .from('profiles')
-            .update(updates)
-            .eq('id', user.id)
-          
-          if (error) throw error
-          
-          set((state) => ({
-            profile: state.profile ? { ...state.profile, ...updates } : null
-          }))
-        } catch (error) {
-          console.error('Update profile error:', error)
-          throw error
-        }
-      },
-
-      fetchProfile: async () => {
-        const { user } = get()
-        if (!user) return
-        
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single()
-          
-          if (error) throw error
-          
-          set({ profile: data })
-        } catch (error) {
-          console.error('Fetch profile error:', error)
-        }
-      },
-    }),
-    {
-      name: 'moodly-auth',
-      partialize: (state) => ({ user: state.user, profile: state.profile }),
+        });
+      } catch (error) {
+        console.error('Error parsing user session:', error);
+        get().logout();
+      }
+    } else {
+      set({
+        user: null,
+        profile: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
     }
-  )
-)
-
-// Initialize auth state
-supabase.auth.onAuthStateChange((event, session) => {
-  const { fetchProfile } = useAuthStore.getState()
-  
-  if (event === 'SIGNED_IN' && session?.user) {
-    useAuthStore.setState({ user: session.user })
-    fetchProfile()
-  } else if (event === 'SIGNED_OUT') {
-    useAuthStore.setState({ user: null, profile: null })
-  }
-})
+  },
+}));

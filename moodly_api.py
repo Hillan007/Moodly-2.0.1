@@ -33,7 +33,7 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in
 # Configure CORS to allow requests from React dev server
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:8083", "http://localhost:8084", "http://localhost:3000", "http://localhost:5173"],
+        "origins": ["http://localhost:3001", "http://localhost:8084", "http://localhost:3000", "http://localhost:5173"],
         "supports_credentials": True
     }
 })
@@ -590,9 +590,9 @@ def get_analytics():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 3000))
     print(" Starting Flask development server...")
     print(f" Server will be available at: http://localhost:{port}")
-    print(" Alternative URL: http://127.0.0.1:5000")
+    print(" Alternative URL: http://127.0.0.1:3001")
     print("============================================================")
     app.run(debug=False, host='0.0.0.0', port=port)

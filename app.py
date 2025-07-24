@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__, static_folder='dist', static_url_path='/')
 
 # Railway configuration
-PORT = int(os.environ.get('PORT', 8080))  # Railway uses 8080
+PORT = int(os.environ.get('PORT', 3001))  # Railway uses 8080
 SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', 'dcc11d2e93bbd856628b97b61f5029c98b7974a6fcb2fa97b3c21b5d91b6d7d5')
 app.config['SECRET_KEY'] = SECRET_KEY
 
@@ -24,8 +24,8 @@ app.config['SECRET_KEY'] = SECRET_KEY
 CORS(app, origins=[
     "https://*.railway.app",
     "https://*.up.railway.app",
-    "http://localhost:3000",
-    "http://localhost:5173"
+    "http://localhost:3001",
+    "http://localhost:5000"
 ])
 
 # Health check for Railway
@@ -157,19 +157,32 @@ def serve_react_static(path):
         else:
             return render_template_string(TEMP_INDEX)
 
-if __name__ == '__main__':
+
+:
     # Initialize database on startup
     init_db()
     
+    # Check if React build exists
+    dist_exists = os.path.exists('dist') and os.path.exists('dist/index.html')
+    
+    print("=" * 50)
     print(f"🚀 Starting Moodly on port {PORT}")
-    print(f"📁 Static folder exists: {os.path.exists('dist')}")
-    if os.path.exists('dist'):
-        print(f"📄 Static files: {os.listdir('dist')}")
+    print(f"📁 Static folder exists: {dist_exists}")
+    
+    if dist_exists:
+        static_files = [f for f in os.listdir('dist') if not f.startswith('.')]
+        print(f"📄 Static files: {static_files[:10]}...")  # Show first 10 files
+        print("✅ React app ready to serve")
+    else:
+        print("⚠️  React app not built yet - serving temporary page")
+        print("   Run 'npm run build' to build the frontend")
+    
     print(f"🌍 Environment: {os.environ.get('RAILWAY_ENVIRONMENT', 'development')}")
+    print(f"🌐 Access your app at: http://localhost:{PORT}")
     print("=" * 50)
     
     app.run(
         host='0.0.0.0',
         port=PORT,
-        debug=False
+        debug=os.environ.get('FLASK_ENV') == 'development'
     )

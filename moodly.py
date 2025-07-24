@@ -2003,7 +2003,7 @@ if __name__ == '__main__':
     init_db()
     
     # Production settings
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 3000))
     debug_mode = not is_production()
     
     # Print startup summary

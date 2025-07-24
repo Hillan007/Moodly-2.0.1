@@ -1,118 +1,121 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 
-export default function LoginPage() {
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+    setIsLoading(true);
 
-    const result = await login(email, password);
-    if (result.success) {
-      toast.success('Welcome back!');
-      navigate('/dashboard');
-    } else {
-      toast.error(result.error || 'Invalid email or password');
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (email && password) {
+        const userData = {
+          id: Date.now().toString(),
+          email: email,
+          name: email.split('@')[0],
+        };
+
+        // Use auth store login
+        login(userData);
+        
+        toast.success('Login successful! Welcome to Moodly 🧠');
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        toast.error('Please enter both email and password');
+      }
+    } catch (err) {
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Moodly
-            </span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-2xl">🧠</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to continue your wellness journey</p>
-        </div>
-
-        <Card className="shadow-glow border-0 bg-card/50 backdrop-blur">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-center">Sign in to your account</CardTitle>
-            <CardDescription className="text-center">
-              Enter your email and password to access your dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-primary text-white shadow-soft hover:shadow-medium transition-all"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Link to="/signup" className="text-primary hover:text-primary-glow font-medium">
+          <CardTitle className="text-3xl font-bold text-gray-900">Welcome to Moodly</CardTitle>
+          <CardDescription className="text-gray-600">
+            Sign in to your account to continue your mental wellness journey
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base font-semibold"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </Button>
+            
+            <div className="text-center text-sm">
+              <span className="text-gray-600">Don't have an account? </span>
+              <Link to="/signup" className="text-blue-600 hover:text-blue-500 font-medium">
                 Sign up
               </Link>
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="mt-8 text-center">
-          <Link to="/" className="text-muted-foreground hover:text-foreground text-sm">
-            ← Back to homepage
-          </Link>
-        </div>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default LoginPage;

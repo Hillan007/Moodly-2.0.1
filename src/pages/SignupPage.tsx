@@ -1,156 +1,165 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 
-export default function SignupPage() {
-  const [username, setUsername] = useState('');
+const SignupPage: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { signup, isLoading } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!username || !email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+    setIsLoading(true);
 
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
+      setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters');
+      setIsLoading(false);
       return;
     }
 
-    const result = await signup(username, email, password);
-    if (result.success) {
-      toast.success('Account created successfully! Welcome to Moodly!');
-      navigate('/dashboard');
-    } else {
-      toast.error(result.error || 'Failed to create account. Please try again.');
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (name && email && password) {
+        const userData = {
+          id: Date.now().toString(),
+          email: email,
+          name: name,
+        };
+
+        // Use auth store login
+        login(userData);
+        
+        toast.success('Account created successfully! Welcome to Moodly 🎉');
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        toast.error('Please fill in all fields');
+      }
+    } catch (err) {
+      toast.error('Signup failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Moodly
-            </span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-2xl">🧠</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
-          <p className="text-muted-foreground">Start your mental wellness journey today</p>
-        </div>
-
-        <Card className="shadow-glow border-0 bg-card/50 backdrop-blur">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-center">Sign up for Moodly</CardTitle>
-            <CardDescription className="text-center">
-              Create an account to begin tracking your mental wellness
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password (min. 6 characters)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-primary text-white shadow-soft hover:shadow-medium transition-all"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Already have an account? </span>
-              <Link to="/login" className="text-primary hover:text-primary-glow font-medium">
+          <CardTitle className="text-3xl font-bold text-gray-900">Join Moodly</CardTitle>
+          <CardDescription className="text-gray-600">
+            Create your account to start your mental wellness journey
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignup} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Create a password (min. 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirm Password
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base font-semibold"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating account...
+                </>
+              ) : (
+                'Create Account'
+              )}
+            </Button>
+            
+            <div className="text-center text-sm">
+              <span className="text-gray-600">Already have an account? </span>
+              <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
                 Sign in
               </Link>
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="mt-8 text-center">
-          <Link to="/" className="text-muted-foreground hover:text-foreground text-sm">
-            ← Back to homepage
-          </Link>
-        </div>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default SignupPage;
