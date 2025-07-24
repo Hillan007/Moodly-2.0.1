@@ -20,7 +20,7 @@ Moodly v2 is currently in development, featuring:
 - 🎧 Mood-based music via Spotify API
 - 📸 Profile uploads using Supabase/cloudinary
 
-🎬 **Watch the video demo:** [Click here to view on Google Drive](https://drive.google.com/your-video-link)
+🎬 **Watch the video demo:** [Click here to view on Google Drive](https://drive.google.com/file/d/1MEIKSId7w17cFx85hY5IY4LvGPCGZnQ1/view?usp=sharing)
 
 > Deployment in progress — check back soon for the live v2 experience!
 
