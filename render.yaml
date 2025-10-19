@@ -1,13 +1,44 @@
 services:
   - type: web
-    name: moodly-app
+    name: moodly-backend
     env: python
-    plan: free
-    buildCommand: "./build.sh"
-    startCommand: "python app.py"
+    buildCommand: |
+      pip install -r requirements.txt
+      python -c "import moodly; moodly.init_db()"
+    startCommand: gunicorn --bind 0.0.0.0:$PORT moodly:app
     envVars:
-      - key: FLASK_SECRET_KEY
-        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: moodly-db
+          property: connectionString
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: OPENAI_API_KEY
-        sync: false  # Set this manually in Render dashboard
-    autoDeploy: true
+        sync: false
+
+  - type: static
+    name: moodly-frontend
+    buildCommand: |
+      npm install
+      npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+
+databases:
+  - name: moodly-db
+    databaseName: moodly
+    user: moodly_user

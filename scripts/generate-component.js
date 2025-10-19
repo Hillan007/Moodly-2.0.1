@@ -1,4 +1,3 @@
-oodly 2.0 by Hillan\collab-edit-github-now\scripts\generate-component.js
 // Generate native UI components without external dependencies
 const fs = require('fs');
 const path = require('path');

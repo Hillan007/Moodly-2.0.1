@@ -2,6 +2,8 @@
 import os
 import sys
 from dotenv import load_dotenv
+import psycopg2
+from urllib.parse import urlparse
 
 # Load environment variables from .env file
 load_dotenv()
@@ -83,6 +85,43 @@ if is_vercel():
     os.environ['DISABLE_LOCAL_STORAGE'] = 'true'
     os.environ['FORCE_CLOUDINARY_ONLY'] = 'true'
 else:
+    DATABASE_PATH = 'moodly.db'
+
+# Detect Render environment
+def is_render():
+    return os.environ.get('RENDER') is not None
+
+# Database configuration for Render
+def get_database_url():
+    """Get database URL for different environments"""
+    database_url = os.environ.get('DATABASE_URL')
+    
+    if database_url:
+        # Parse PostgreSQL URL for Render
+        url = urlparse(database_url)
+        return {
+            'host': url.hostname,
+            'port': url.port,
+            'database': url.path[1:],
+            'user': url.username,
+            'password': url.password
+        }
+    else:
+        # Use SQLite for local development
+        return {'sqlite': 'moodly.db'}
+
+# Update database path for Render
+if is_render():
+    # Use PostgreSQL on Render
+    db_config = get_database_url()
+    if 'sqlite' not in db_config:
+        DATABASE_TYPE = 'postgresql'
+        DATABASE_CONFIG = db_config
+    else:
+        DATABASE_TYPE = 'sqlite'
+        DATABASE_PATH = '/opt/render/project/src/moodly.db'
+else:
+    DATABASE_TYPE = 'sqlite'
     DATABASE_PATH = 'moodly.db'
 
 # Initialize Flask app
@@ -186,57 +225,122 @@ def update_database_schema():
 update_database_schema()
 def init_db():
     """Initialize the SQLite database with all required tables"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    
-    # Users table with profile picture support
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            profile_picture TEXT,
-            cloudinary_id TEXT,
-            bio TEXT,
-            mood_streak INTEGER DEFAULT 0,
-            last_mood_date DATE
-        )
-    ''')
-    
-    # Mood entries table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS mood_entries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            mood_score INTEGER NOT NULL,
-            mood_description TEXT,
-            entry_text TEXT,
-            ai_insights TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            tags TEXT,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
-    
-    # Goals table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS goals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT,
-            target_date DATE,
-            completed BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-    print("✅ Database initialized successfully")
+    if DATABASE_TYPE == 'postgresql':
+        try:
+            # PostgreSQL connection for Render
+            conn = psycopg2.connect(
+                host=DATABASE_CONFIG['host'],
+                port=DATABASE_CONFIG['port'],
+                database=DATABASE_CONFIG['database'],
+                user=DATABASE_CONFIG['user'],
+                password=DATABASE_CONFIG['password']
+            )
+            cursor = conn.cursor()
+            
+            # Create tables with PostgreSQL syntax
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(255) UNIQUE NOT NULL,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    profile_picture TEXT,
+                    cloudinary_id TEXT,
+                    bio TEXT,
+                    mood_streak INTEGER DEFAULT 0,
+                    last_mood_date DATE
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS mood_entries (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    mood_score INTEGER NOT NULL,
+                    mood_description TEXT,
+                    entry_text TEXT,
+                    ai_insights TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    tags TEXT,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS goals (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    target_date DATE,
+                    completed BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            ''')
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("✅ PostgreSQL database initialized successfully")
+            
+        except Exception as e:
+            print(f"❌ PostgreSQL database initialization failed: {e}")
+            print("📋 Please check your DATABASE_URL environment variable")
+    else:
+        # SQLite initialization (existing code)
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        # Users table with profile picture support
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                profile_picture TEXT,
+                cloudinary_id TEXT,
+                bio TEXT,
+                mood_streak INTEGER DEFAULT 0,
+                last_mood_date DATE
+            )
+        ''')
+        
+        # Mood entries table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS mood_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                mood_score INTEGER NOT NULL,
+                mood_description TEXT,
+                entry_text TEXT,
+                ai_insights TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                tags TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        # Goals table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                target_date DATE,
+                completed BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+        print("✅ SQLite database initialized successfully")
 
 # File upload helpers for Cloudinary
 def upload_profile_picture(file, user_id):
@@ -1577,111 +1681,7 @@ def breathing_exercise(mood_key=None):
             'description': 'Helps calm anxiety and racing thoughts',
             'instructions': [
                 'Sit or lie down comfortably',
-                'Breathe out slowly to empty your lungs',
-                'Breathe in through your nose for 4 counts',
-                'Hold your breath for 4 counts',
-                'Breathe out through your mouth for 4 counts',
-                'Hold empty for 4 counts',
-                'Repeat for 5-10 cycles'
-            ],
-            'pattern': '4-4-4-4',
-            'duration': 5,
-            'color': 'warning',
-            'icon': 'fas fa-square'
-        },
-        'energetic': {
-            'name': 'Energizing Breath',
-            'description': 'Helps channel high energy positively',
-            'instructions': [
-                'Stand with feet shoulder-width apart',
-                'Take a deep breath in through your nose',
-                'Hold for 2 counts',
-                'Exhale forcefully through your mouth',
-                'Pause for 1 count',
-                'Repeat 8-10 times',
-                'Focus on releasing excess energy'
-            ],
-            'pattern': '4-2-4-1',
-            'duration': 3,
-            'color': 'success',
-            'icon': 'fas fa-bolt'
-        },
-        'sad': {
-            'name': 'Heart-Opening Breath',
-            'description': 'Gentle breathing to lift your spirits',
-            'instructions': [
-                'Sit with your chest open and shoulders relaxed',
-                'Place one hand on your heart',
-                'Breathe in slowly for 5 counts, expanding your chest',
-                'Hold gently for 3 counts',
-                'Exhale slowly for 7 counts',
-                'Imagine breathing in warmth and light',
-                'Repeat 6-8 times'
-            ],
-            'pattern': '5-3-7',
-            'duration': 6,
-            'color': 'info',
-            'icon': 'fas fa-heart'
-        },
-        'angry': {
-            'name': 'Cooling Breath',
-            'description': 'Helps cool down anger and frustration',
-            'instructions': [
-                'Sit comfortably with your spine straight',
-                'Curl your tongue or purse your lips',
-                'Inhale slowly through your curled tongue for 6 counts',
-                'Close your mouth and hold for 2 counts',
-                'Exhale slowly through your nose for 8 counts',
-                'Feel the cooling sensation',
-                'Repeat 5-7 times'
-            ],
-            'pattern': '6-2-8',
-            'duration': 5,
-            'color': 'primary',
-            'icon': 'fas fa-snowflake'
-        },
-        'default': {
-            'name': 'Basic Mindful Breathing',
-            'description': 'Simple breathing for everyday mindfulness',
-            'instructions': [
-                'Find a comfortable position',
-                'Close your eyes or soften your gaze',
-                'Breathe naturally through your nose',
-                'Count each breath: in-1, out-2, in-3, out-4',
-                'When you reach 10, start over at 1',
-                'If your mind wanders, gently return to counting',
-                'Continue for 5-10 minutes'
-            ],
-            'pattern': 'Natural',
-            'duration': 10,
-            'color': 'secondary',
-            'icon': 'fas fa-lungs'
-        }
-    }
-    
-    # Select exercise based on mood_key or default
-    selected_exercise = exercises.get(mood_key, exercises['default'])
-    
-    return render_template('breathing_exercise.html', 
-                         user=user, 
-                         exercise=selected_exercise,
-                         mood_key=mood_key,
-                         all_exercises=exercises)
-
-@app.route('/meditation')
-def meditation():
-    """Guided meditation page"""
-    user = get_current_user()
-    if not user:
-        return redirect(url_for('login'))
-    
-    # Meditation sessions
-    meditations = [
-        {
-            'title': 'Body Scan Relaxation',
-            'duration': '10 minutes',
-            'description': 'Release tension from head to toe',
-            'difficulty': 'Beginner',
+                'Breathe out slowly
             'icon': 'fas fa-user',
             'color': 'primary'
         },

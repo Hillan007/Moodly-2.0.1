@@ -33,27 +33,39 @@ const SignupPage: React.FC = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call Flask backend to register user. Adjust port if your Flask server runs on a different port.
+      const res = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: name, email, password })
+      });
 
-      if (name && email && password) {
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const message = json.error || json.message || 'Signup failed';
+        toast.error(String(message));
+        setIsLoading(false);
+        return;
+      }
+
+      // Expecting Flask to return { message: 'User registered successfully', user: { id, username, email } }
+      if (json.user) {
         const userData = {
-          id: Date.now().toString(),
-          email: email,
-          name: name,
+          id: String(json.user.id),
+          email: json.user.email,
+          name: json.user.username || name,
         };
 
-        // Use auth store login
+        // Store session locally and update UI
         login(userData);
-        
         toast.success('Account created successfully! Welcome to Moodly 🎉');
-        
-        // Navigate to dashboard
         navigate('/dashboard');
       } else {
-        toast.error('Please fill in all fields');
+        toast.error('Unexpected server response');
       }
     } catch (err) {
+      console.error('Signup error:', err);
       toast.error('Signup failed. Please try again.');
     } finally {
       setIsLoading(false);
