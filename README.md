@@ -2,12 +2,29 @@
 
 > *Empowering mental wellness through intelligent mood tracking, mindful breathing, and comprehensive analytics.*
 
-![Moodly Banner](public/placeholder.svg)
+
 
 ## 🎯 Why Choose Moodly?
 
 Moodly is more than just a mood tracker - it's your complete mental health companion designed to help you understand, monitor, and improve your emotional well-being. Built with modern technology and user-centric design, Moodly offers a comprehensive suite of tools that make mental health management accessible, engaging, and effective for everyone.
 
+## 🌟 Live Demo (v1.0)
+Check out the first deployed version of Moodly with foundational features:
+🔗 [moodly-v1 live app](https://moodly-2-0.vercel.app/)  
+📁 [View the v1.0 source code](https://github.com/Hillan007/Moodly-2.0)
+
+## 🚀 Moodly v2 Preview
+Moodly v2 is currently in development, featuring:
+
+- 🧠 Emotion-driven journaling with AI insights
+- 🎧 Mood-based music via Spotify API
+- 📸 Profile uploads using Supabase/cloudinary
+
+🎬 **Watch the video demo:** [Click here to view on Google Drive](https://drive.google.com/file/d/1MEIKSId7w17cFx85hY5IY4LvGPCGZnQ1/view?usp=sharing)
+
+> Deployment in progress — check back soon for the live v2 experience!
+
+> Note: We're currently working on Moodly v2 — redesigned with more intuitive UI, Spotify mood-sync, and secure journaling features. Deployment is in progress!
 ## ✨ Key Features
 
 ### 📊 **Comprehensive Mood Tracking**
@@ -208,18 +225,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Mental health professionals who provided guidance on best practices
+- Mental health professionals who provided guidance on best practices resources
+- PLP fo the knowledge and skills.
 - The open-source community for amazing tools and libraries
 - Users who provide feedback to make Moodly better every day
 
 ## 📞 Support
 
 Need help? We're here for you:
-- 📧 Email: support@moodly.app
+- 📧 Email: victorhillan007@gmail.com
 - 💬 GitHub Issues: [Report a bug or request a feature](https://github.com/Hillan007/collab-edit-github-now/issues)
 - 📖 Documentation: Check our [Wiki](https://github.com/Hillan007/collab-edit-github-now/wiki)
 
 ---
+
+🎬 Watch Moodly in action: [Demo Video](https://drive.google.com/your-link-here)
 
 **Start your mental wellness journey today with Moodly - because your mental health matters! 💚**
 
