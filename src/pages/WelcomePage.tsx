@@ -66,7 +66,7 @@ const WelcomePage: React.FC = () => {
               <span className="text-2xl">🧠</span>
               <span className="ml-2 text-xl font-bold text-gray-900">Moodly</span>
             </div>
-            
+
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
               <Link to="/login">
@@ -96,7 +96,7 @@ const WelcomePage: React.FC = () => {
               <span className="block text-blue-600">Journey Starts Here</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Discover a comprehensive platform designed to support your mental health journey. 
+              Discover a comprehensive platform designed to support your mental health journey.
               Track your moods, journal your thoughts, and build lasting wellness habits with Moodly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -123,11 +123,11 @@ const WelcomePage: React.FC = () => {
               Everything You Need for Mental Wellness
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Comprehensive tools and features designed by mental health professionals 
+              Comprehensive tools and features designed by mental health professionals
               to support your emotional well-being.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
@@ -159,7 +159,7 @@ const WelcomePage: React.FC = () => {
           <p className="text-xl text-blue-100 mb-12 max-w-2xl mx-auto">
             Join thousands of users who have transformed their mental wellness journey
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
               <div className="text-3xl mb-4">🔒</div>
@@ -170,7 +170,7 @@ const WelcomePage: React.FC = () => {
                 Your data is encrypted and completely private. Only you have access to your personal information.
               </p>
             </div>
-            
+
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
               <div className="text-3xl mb-4">📱</div>
               <h3 className="text-xl font-semibold text-white mb-2">
@@ -180,7 +180,7 @@ const WelcomePage: React.FC = () => {
                 Access your wellness tools anytime, anywhere. Your mental health support is always in your pocket.
               </p>
             </div>
-            
+
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
               <div className="text-3xl mb-4">🎯</div>
               <h3 className="text-xl font-semibold text-white mb-2">
@@ -205,7 +205,7 @@ const WelcomePage: React.FC = () => {
               Real stories from people who've transformed their mental wellness
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="bg-white shadow-md">
@@ -267,7 +267,7 @@ const WelcomePage: React.FC = () => {
             Empowering mental wellness, one day at a time.
           </p>
           <p className="text-sm text-gray-500">
-            © 2025 Moodly. All rights reserved. | Privacy Policy | Terms of Service
+            © 2026 Moodly. All rights reserved. | Privacy Policy | Terms of Service
           </p>
         </div>
       </footer>
