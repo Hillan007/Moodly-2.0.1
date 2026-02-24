@@ -8,23 +8,18 @@
 
 Moodly is more than just a mood tracker - it's your complete mental health companion designed to help you understand, monitor, and improve your emotional well-being. Built with modern technology and user-centric design, Moodly offers a comprehensive suite of tools that make mental health management accessible, engaging, and effective for everyone.
 
-## 🌟 Live Demo (v1.0)
-Check out the first deployed version of Moodly with foundational features:
-🔗 [moodly-v1 live app](https://moodly-2-0.vercel.app/)  
-📁 [View the v1.0 source code](https://github.com/Hillan007/Moodly-2.0)
+## 🌟 Live Demo
+🔗 **[Launch Moodly App](https://moodly-2.vercel.app/)** - Experience the full-featured mental wellness platform
 
-## 🚀 Moodly v2 Preview
-Moodly v2 is currently in development, featuring:
+### Features in Production:
+- 🧠 Intelligent mood tracking with real-time analytics
+- 🎧 Mood-based music recommendations
+- 📊 Comprehensive wellness dashboard
+- 🧘 Guided breathing exercises
+- 📝 Secure journaling with AI insights
+- 📸 Profile customization
 
-- 🧠 Emotion-driven journaling with AI insights
-- 🎧 Mood-based music via Spotify API
-- 📸 Profile uploads using Supabase/cloudinary
-
-🎬 **Watch the video demo:** [Click here to view on Google Drive](https://drive.google.com/file/d/1MEIKSId7w17cFx85hY5IY4LvGPCGZnQ1/view?usp=sharing)
-
-> Deployment in progress — check back soon for the live v2 experience!
-
-> Note: We're currently working on Moodly v2 — redesigned with more intuitive UI, Spotify mood-sync, and secure journaling features. Deployment is in progress!
+🎬 **Watch the demo:** [View on Google Drive](https://drive.google.com/file/d/1MEIKSId7w17cFx85hY5IY4LvGPCGZnQ1/view?usp=sharing)
 ## ✨ Key Features
 
 ### 📊 **Comprehensive Mood Tracking**
