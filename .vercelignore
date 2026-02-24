@@ -1,0 +1,8 @@
+# Ignore backend folder - deployed separately on Render
+backend/
+*.db
+*.py
+venv/
+__pycache__/
+*.pyc
+.env
