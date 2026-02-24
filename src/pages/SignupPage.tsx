@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
+import config from '@/config';
 
 const SignupPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -34,7 +35,7 @@ const SignupPage: React.FC = () => {
 
     try {
       // Call Flask backend to register user. Adjust port if your Flask server runs on a different port.
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch(`${config.API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: name, email, password })
@@ -100,7 +101,7 @@ const SignupPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email Address
@@ -115,7 +116,7 @@ const SignupPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
@@ -130,7 +131,7 @@ const SignupPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
                 Confirm Password
@@ -145,9 +146,9 @@ const SignupPage: React.FC = () => {
                 required
               />
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full h-12 text-base font-semibold"
               disabled={isLoading}
             >
@@ -160,7 +161,7 @@ const SignupPage: React.FC = () => {
                 'Create Account'
               )}
             </Button>
-            
+
             <div className="text-center text-sm">
               <span className="text-gray-600">Already have an account? </span>
               <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
