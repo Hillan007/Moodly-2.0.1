@@ -16,6 +16,7 @@ interface AuthState {
   loading: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
+  checkAuth: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -33,6 +34,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   get isLoading() {
     return get().loading;
+  },
+
+  checkAuth: async () => {
+    set({ loading: true });
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      const sessionUser = data.session?.user ?? null;
+      set({ user: sessionUser });
+      if (sessionUser) {
+        await get().fetchProfile();
+      }
+    } catch (error) {
+      console.error('Check auth error:', error);
+      set({ user: null, profile: null });
+    } finally {
+      set({ loading: false });
+    }
   },
 
   signIn: async (email: string, password: string) => {
