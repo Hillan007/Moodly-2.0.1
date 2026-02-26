@@ -29,34 +29,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   loading: false,
-  get isAuthenticated() {
-    return !!get().user;
-  },
-  get isLoading() {
-    return get().loading;
-  },
+  isAuthenticated: false,
+  isLoading: false,
 
   checkAuth: async () => {
-    set({ loading: true });
+    set({ loading: true, isLoading: true });
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
 
       const sessionUser = data.session?.user ?? null;
-      set({ user: sessionUser });
+      set({ user: sessionUser, isAuthenticated: !!sessionUser });
       if (sessionUser) {
         await get().fetchProfile();
       }
     } catch (error) {
       console.error('Check auth error:', error);
-      set({ user: null, profile: null });
+      set({ user: null, profile: null, isAuthenticated: false });
     } finally {
-      set({ loading: false });
+      set({ loading: false, isLoading: false });
     }
   },
 
   signIn: async (email: string, password: string) => {
-    set({ loading: true });
+    set({ loading: true, isLoading: true });
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -65,18 +61,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (error) throw error;
 
-      set({ user: data.user });
+      set({ user: data.user, isAuthenticated: true });
       await get().fetchProfile();
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
     } finally {
-      set({ loading: false });
+      set({ loading: false, isLoading: false });
     }
   },
 
   signUp: async (email: string, password: string, username: string) => {
-    set({ loading: true });
+    set({ loading: true, isLoading: true });
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -91,14 +87,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (error) throw error;
 
       if (data.user) {
-        set({ user: data.user });
+        set({ user: data.user, isAuthenticated: true });
         setTimeout(() => get().fetchProfile(), 500);
       }
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
     } finally {
-      set({ loading: false });
+      set({ loading: false, isLoading: false });
     }
   },
 
@@ -107,7 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      set({ user: null, profile: null });
+      set({ user: null, profile: null, isAuthenticated: false });
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
@@ -164,9 +160,9 @@ supabase.auth.onAuthStateChange((event, session) => {
   const { fetchProfile } = useAuthStore.getState();
 
   if (event === 'SIGNED_IN' && session?.user) {
-    useAuthStore.setState({ user: session.user });
+    useAuthStore.setState({ user: session.user, isAuthenticated: true });
     fetchProfile();
   } else if (event === 'SIGNED_OUT') {
-    useAuthStore.setState({ user: null, profile: null });
+    useAuthStore.setState({ user: null, profile: null, isAuthenticated: false });
   }
 });
