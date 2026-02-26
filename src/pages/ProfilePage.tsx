@@ -8,19 +8,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Camera, 
-  Bell, 
-  Shield, 
-  Moon, 
+import {
+  User,
+  Mail,
+  Calendar,
+  Camera,
+  Bell,
+  Shield,
+  Moon,
   Sun,
   Trash2,
   Save
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
@@ -88,7 +88,7 @@ export default function ProfilePage() {
                 <Camera className="w-4 h-4" />
               </Button>
             </div>
-            
+
             <div className="flex-1 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -103,7 +103,7 @@ export default function ProfilePage() {
                     <p className="px-3 py-2 bg-muted rounded-md">{user?.username}</p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   {isEditing ? (
@@ -118,7 +118,7 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
                 {isEditing ? (
@@ -202,14 +202,14 @@ export default function ProfilePage() {
             </div>
             <Switch
               checked={notifications.dailyReminders}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 setNotifications(prev => ({ ...prev, dailyReminders: checked }))
               }
             />
           </div>
-          
+
           <Separator />
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-base">Weekly wellness reports</Label>
@@ -217,14 +217,14 @@ export default function ProfilePage() {
             </div>
             <Switch
               checked={notifications.weeklyReports}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 setNotifications(prev => ({ ...prev, weeklyReports: checked }))
               }
             />
           </div>
-          
+
           <Separator />
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-base">Mood trend alerts</Label>
@@ -232,7 +232,7 @@ export default function ProfilePage() {
             </div>
             <Switch
               checked={notifications.moodAlerts}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 setNotifications(prev => ({ ...prev, moodAlerts: checked }))
               }
             />

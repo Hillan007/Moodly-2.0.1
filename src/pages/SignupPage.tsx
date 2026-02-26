@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import config from '@/config';
 
 const SignupPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -15,7 +14,7 @@ const SignupPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { signUp } = useAuthStore();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,40 +33,14 @@ const SignupPage: React.FC = () => {
     }
 
     try {
-      // Call Flask backend to register user. Adjust port if your Flask server runs on a different port.
-      const res = await fetch(`${config.API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: name, email, password })
-      });
-
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const message = json.error || json.message || 'Signup failed';
-        toast.error(String(message));
-        setIsLoading(false);
-        return;
-      }
-
-      // Expecting Flask to return { message: 'User registered successfully', user: { id, username, email } }
-      if (json.user) {
-        const userData = {
-          id: String(json.user.id),
-          email: json.user.email,
-          name: json.user.username || name,
-        };
-
-        // Store session locally and update UI
-        login(userData);
-        toast.success('Account created successfully! Welcome to Moodly 🎉');
-        navigate('/dashboard');
-      } else {
-        toast.error('Unexpected server response');
-      }
+      // Use Supabase authentication
+      await signUp(email, password, name);
+      toast.success('Account created successfully! Welcome to Moodly 🎉');
+      navigate('/dashboard');
     } catch (err) {
       console.error('Signup error:', err);
-      toast.error('Signup failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Signup failed. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

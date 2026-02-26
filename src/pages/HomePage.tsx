@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Brain, Heart, Shield, TrendingUp, Users, Wind } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 
 const features = [
   {
@@ -59,29 +59,29 @@ export default function HomePage() {
               <Heart className="w-4 h-4" />
               <span className="text-sm font-medium">Your Mental Wellness Journey Starts Here</span>
             </div>
-            
+
             <h1 className="text-5xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
               Take Control of Your
               <br />
               Mental Health
             </h1>
-            
+
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Moodly is your personal mental wellness companion. Track your moods, build healthy habits, 
+              Moodly is your personal mental wellness companion. Track your moods, build healthy habits,
               and get AI-powered insights to improve your emotional well-being.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                asChild 
-                size="lg" 
+              <Button
+                asChild
+                size="lg"
                 className="px-8 py-3 bg-gradient-primary text-white shadow-glow hover:shadow-xl transition-all"
               >
                 <Link to="/signup">Start Your Journey</Link>
               </Button>
-              <Button 
-                asChild 
-                variant="outline" 
+              <Button
+                asChild
+                variant="outline"
                 size="lg"
                 className="px-8 py-3 border-2 hover:bg-accent"
               >
@@ -103,11 +103,11 @@ export default function HomePage() {
               Comprehensive tools and insights to help you understand and improve your mental health.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card 
-                key={index} 
+              <Card
+                key={index}
                 className="p-6 hover:shadow-medium transition-all duration-300 border-0 bg-card/50 backdrop-blur"
               >
                 <CardContent className="p-0">
@@ -132,11 +132,11 @@ export default function HomePage() {
                 Ready to Transform Your Mental Health?
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join thousands of users who have improved their mental wellness with Moodly's 
+                Join thousands of users who have improved their mental wellness with Moodly's
                 evidence-based tools and personalized insights.
               </p>
-              <Button 
-                asChild 
+              <Button
+                asChild
                 size="lg"
                 className="px-8 py-3 bg-gradient-primary text-white shadow-medium hover:shadow-glow transition-all"
               >
@@ -155,7 +155,7 @@ export default function HomePage() {
             <span className="text-xl font-bold">Moodly</span>
           </div>
           <p className="text-muted-foreground">
-            Your privacy and mental health are our priorities. 
+            Your privacy and mental health are our priorities.
             <br />
             All data is encrypted and securely stored.
           </p>

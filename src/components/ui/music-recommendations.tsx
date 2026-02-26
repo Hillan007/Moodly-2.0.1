@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Music, Play, Pause, Search, Heart, ExternalLink, Shuffle, Clock, Users } from 'lucide-react';
 import config from '@/config';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 
 // Enhanced curated playlists with Spotify URLs as fallback
 const CURATED_PLAYLISTS = [
@@ -18,33 +18,33 @@ const CURATED_PLAYLISTS = [
     spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFox5g', // Peaceful Piano
     image: 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
     tracks: [
-      { 
-        name: 'River Flows in You', 
-        artist: 'Yiruma', 
+      {
+        name: 'River Flows in You',
+        artist: 'Yiruma',
         duration: '3:37',
         spotifyUrl: 'https://open.spotify.com/track/6JQm7SzLqHwNYHdad0VW2w'
       },
-      { 
-        name: 'Clair de Lune', 
-        artist: 'Claude Debussy', 
+      {
+        name: 'Clair de Lune',
+        artist: 'Claude Debussy',
         duration: '4:39',
         spotifyUrl: 'https://open.spotify.com/track/4Tr0VdtYf6bUJECVFlqL6h'
       },
-      { 
-        name: 'Weightless', 
-        artist: 'Marconi Union', 
+      {
+        name: 'Weightless',
+        artist: 'Marconi Union',
         duration: '8:08',
         spotifyUrl: 'https://open.spotify.com/track/7MXmNrGygYKNJoDIK6aaVS'
       },
-      { 
-        name: 'Mad World', 
-        artist: 'Gary Jules', 
+      {
+        name: 'Mad World',
+        artist: 'Gary Jules',
         duration: '3:07',
         spotifyUrl: 'https://open.spotify.com/track/3JOVTQ5h8HGFnDdp4VT3MP'
       },
-      { 
-        name: 'The Blue Notebooks', 
-        artist: 'Max Richter', 
+      {
+        name: 'The Blue Notebooks',
+        artist: 'Max Richter',
         duration: '3:34',
         spotifyUrl: 'https://open.spotify.com/track/3geHI6kkpsPOQbkdPRKlpD'
       }
@@ -59,33 +59,33 @@ const CURATED_PLAYLISTS = [
     spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX3rxVfibe1L0', // Mood Booster
     image: 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
     tracks: [
-      { 
-        name: 'Good as Hell', 
-        artist: 'Lizzo', 
+      {
+        name: 'Good as Hell',
+        artist: 'Lizzo',
         duration: '2:39',
         spotifyUrl: 'https://open.spotify.com/track/1PloQgLPNPtPlQJmUFFOaC'
       },
-      { 
-        name: 'Happy', 
-        artist: 'Pharrell Williams', 
+      {
+        name: 'Happy',
+        artist: 'Pharrell Williams',
         duration: '3:53',
         spotifyUrl: 'https://open.spotify.com/track/60nZcImufyMA1MKQY3dcCH'
       },
-      { 
-        name: 'Can\'t Stop the Feeling!', 
-        artist: 'Justin Timberlake', 
+      {
+        name: 'Can\'t Stop the Feeling!',
+        artist: 'Justin Timberlake',
         duration: '3:56',
         spotifyUrl: 'https://open.spotify.com/track/20I6sIOMTCkB6w7ryavxtO'
       },
-      { 
-        name: 'Uptown Funk', 
-        artist: 'Mark Ronson ft. Bruno Mars', 
+      {
+        name: 'Uptown Funk',
+        artist: 'Mark Ronson ft. Bruno Mars',
         duration: '4:30',
         spotifyUrl: 'https://open.spotify.com/track/32OlwWuMpZ6b0aN2RZOeMS'
       },
-      { 
-        name: 'Shake It Off', 
-        artist: 'Taylor Swift', 
+      {
+        name: 'Shake It Off',
+        artist: 'Taylor Swift',
         duration: '3:39',
         spotifyUrl: 'https://open.spotify.com/track/5ncPWWw0QLgeSc3bQKs5A0'
       }
@@ -100,21 +100,21 @@ const CURATED_PLAYLISTS = [
     spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX1s9knjP51Oa', // Peaceful Instrumental
     image: 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
     tracks: [
-      { 
-        name: 'Aqueous Transmission', 
-        artist: 'Incubus', 
+      {
+        name: 'Aqueous Transmission',
+        artist: 'Incubus',
         duration: '7:49',
         spotifyUrl: 'https://open.spotify.com/track/4qiyoH7HUAHlRoXfH8y5KU'
       },
-      { 
-        name: 'Breathe Me', 
-        artist: 'Sia', 
+      {
+        name: 'Breathe Me',
+        artist: 'Sia',
         duration: '4:30',
         spotifyUrl: 'https://open.spotify.com/track/5WUHwvSgLXZhH1QYQ9n49A'
       },
-      { 
-        name: 'Raindrops', 
-        artist: 'A.L.I.S.O.N', 
+      {
+        name: 'Raindrops',
+        artist: 'A.L.I.S.O.N',
         duration: '5:12',
         spotifyUrl: 'https://open.spotify.com/track/3geHI6kkpsPOQbkdPRKlpD'
       }
@@ -129,21 +129,21 @@ const CURATED_PLAYLISTS = [
     spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX8NTLI2TtZa6', // Deep Focus
     image: 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
     tracks: [
-      { 
-        name: 'Elegy for Dunkirk', 
-        artist: 'Dario Marianelli', 
+      {
+        name: 'Elegy for Dunkirk',
+        artist: 'Dario Marianelli',
         duration: '1:37',
         spotifyUrl: 'https://open.spotify.com/track/2ZHKhQNNhQvTlw95R0QFVL'
       },
-      { 
-        name: 'Time', 
-        artist: 'Hans Zimmer', 
+      {
+        name: 'Time',
+        artist: 'Hans Zimmer',
         duration: '4:35',
         spotifyUrl: 'https://open.spotify.com/track/6ZFbXIJkuI1dVNWvzJzown'
       },
-      { 
-        name: 'Experience', 
-        artist: 'Ludovico Einaudi', 
+      {
+        name: 'Experience',
+        artist: 'Ludovico Einaudi',
         duration: '5:15',
         spotifyUrl: 'https://open.spotify.com/track/1p4VHNx1UlUvMSr4tK5pXe'
       }
@@ -158,21 +158,21 @@ const CURATED_PLAYLISTS = [
     spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX9u7XXOp0l5L', // Feel Good Indie Rock
     image: 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
     tracks: [
-      { 
-        name: 'Three Little Birds', 
-        artist: 'Bob Marley & The Wailers', 
+      {
+        name: 'Three Little Birds',
+        artist: 'Bob Marley & The Wailers',
         duration: '3:00',
         spotifyUrl: 'https://open.spotify.com/track/6JOTmd5A7PoJ6PyOhM1KJK'
       },
-      { 
-        name: 'Here Comes the Sun', 
-        artist: 'The Beatles', 
+      {
+        name: 'Here Comes the Sun',
+        artist: 'The Beatles',
         duration: '3:05',
         spotifyUrl: 'https://open.spotify.com/track/6dGnYIeXmHdcikdzNNDMm2'
       },
-      { 
-        name: 'Walking on Sunshine', 
-        artist: 'Katrina and the Waves', 
+      {
+        name: 'Walking on Sunshine',
+        artist: 'Katrina and the Waves',
         duration: '3:58',
         spotifyUrl: 'https://open.spotify.com/track/05wIrZSwuaVWhcv5FfqeH0'
       }
@@ -270,7 +270,7 @@ export default function MusicPage() {
         if (data.entries && data.entries.length > 0) {
           const recentEntry = data.entries[0];
           const moodValue = recentEntry.mood;
-          
+
           // Determine mood category based on mood score
           let moodCategory = 'calm';
           if (moodValue >= 8) moodCategory = 'happy';
@@ -278,7 +278,7 @@ export default function MusicPage() {
           else if (moodValue >= 4) moodCategory = 'focused';
           else if (moodValue >= 2) moodCategory = 'calm';
           else moodCategory = 'anxious';
-          
+
           setCurrentMood(moodCategory);
         }
       }
@@ -499,14 +499,14 @@ export default function MusicPage() {
                     {playlist.tracks.map((track, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3 flex-1">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="p-1 text-custom-blue hover:bg-custom-blue/10"
                             onClick={() => handlePlayTrack(`${playlist.id}-${index}`, track.spotifyUrl)}
                           >
-                            {currentlyPlaying === `${playlist.id}-${index}` ? 
-                              <Pause className="w-4 h-4" /> : 
+                            {currentlyPlaying === `${playlist.id}-${index}` ?
+                              <Pause className="w-4 h-4" /> :
                               <Play className="w-4 h-4" />
                             }
                           </Button>
@@ -569,7 +569,7 @@ export default function MusicPage() {
             <p className="text-custom-blue font-bold-custom mb-4">
               Try searching with different keywords or browse our curated collections
             </p>
-            <Button 
+            <Button
               onClick={() => setSearchQuery('')}
               className="bg-custom-blue text-white hover:bg-custom-blue/90 font-bold-custom"
             >

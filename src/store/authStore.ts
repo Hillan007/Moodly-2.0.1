@@ -14,6 +14,8 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -26,6 +28,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   loading: false,
+  get isAuthenticated() {
+    return !!get().user;
+  },
+  get isLoading() {
+    return get().loading;
+  },
 
   signIn: async (email: string, password: string) => {
     set({ loading: true });
@@ -34,9 +42,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email,
         password,
       });
-      
+
       if (error) throw error;
-      
+
       set({ user: data.user });
       await get().fetchProfile();
     } catch (error) {
@@ -53,24 +61,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: username,
+          }
+        }
       });
-      
+
       if (error) throw error;
-      
+
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            username,
-            email,
-            mood_streak: 0,
-          });
-        
-        if (profileError) throw profileError;
-        
         set({ user: data.user });
-        await get().fetchProfile();
+        setTimeout(() => get().fetchProfile(), 500);
       }
     } catch (error) {
       console.error('Sign up error:', error);
@@ -84,7 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       set({ user: null, profile: null });
     } catch (error) {
       console.error('Sign out error:', error);
@@ -99,15 +101,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateProfile: async (updates: Partial<Profile>) => {
     const { user } = get();
     if (!user) throw new Error('No user logged in');
-    
+
     try {
       const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id);
-      
+
       if (error) throw error;
-      
+
       set((state) => ({
         profile: state.profile ? { ...state.profile, ...updates } : null
       }));
@@ -120,16 +122,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchProfile: async () => {
     const { user } = get();
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
       if (error) throw error;
-      
+
       set({ profile: data });
     } catch (error) {
       console.error('Fetch profile error:', error);
@@ -140,7 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 // Initialize auth state
 supabase.auth.onAuthStateChange((event, session) => {
   const { fetchProfile } = useAuthStore.getState();
-  
+
   if (event === 'SIGNED_IN' && session?.user) {
     useAuthStore.setState({ user: session.user });
     fetchProfile();

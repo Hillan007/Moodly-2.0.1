@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Music, Play, ExternalLink, Heart, RefreshCw, Loader2 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 import config from '@/config';
 
 interface Track {
@@ -107,7 +107,7 @@ const MusicPage: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Add timeout for better UX
       const controller = new AbortController();
@@ -166,7 +166,7 @@ const MusicPage: React.FC = () => {
               {playlist.description}
             </CardDescription>
           </div>
-          <Badge 
+          <Badge
             variant={source === 'spotify' ? 'default' : 'secondary'}
             className="font-semibold text-xs px-2 py-1 flex-shrink-0"
           >
@@ -180,8 +180,8 @@ const MusicPage: React.FC = () => {
           <div className="space-y-4">
             {playlist.image && (
               <div className="relative overflow-hidden rounded-lg">
-                <img 
-                  src={playlist.image} 
+                <img
+                  src={playlist.image}
                   alt={`${playlist.name} playlist cover`}
                   className="w-full h-32 object-cover shadow-sm transition-transform duration-200 hover:scale-105"
                   loading="lazy"
@@ -197,8 +197,8 @@ const MusicPage: React.FC = () => {
               <span className="text-sm font-semibold text-gray-800 flex-shrink-0">
                 {playlist.tracks_total || 0} tracks
               </span>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => playlist.spotify_url && openExternalLink(playlist.spotify_url)}
                 className="font-semibold flex-shrink-0"
@@ -340,7 +340,7 @@ const MusicPage: React.FC = () => {
               </div>
             </div>
 
-            <Button 
+            <Button
               onClick={fetchMusicRecommendations}
               disabled={isLoading}
               className="w-full py-4 sm:py-6 text-base sm:text-lg font-bold"
@@ -384,9 +384,9 @@ const MusicPage: React.FC = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {recommendations.primary.playlists.map((playlist, index) => (
-                  <PlaylistCard 
+                  <PlaylistCard
                     key={`primary-${index}`}
-                    playlist={playlist} 
+                    playlist={playlist}
                     source={recommendations.primary.source}
                   />
                 ))}
@@ -401,9 +401,9 @@ const MusicPage: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {recommendations.fallback.playlists.map((playlist, index) => (
-                    <PlaylistCard 
+                    <PlaylistCard
                       key={`fallback-${index}`}
-                      playlist={playlist} 
+                      playlist={playlist}
                       source={recommendations.fallback.source}
                     />
                   ))}

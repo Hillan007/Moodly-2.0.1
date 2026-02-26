@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 
 const LoginPage: React.FC = () => {
@@ -12,35 +12,20 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { signIn } = useAuthStore();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (email && password) {
-        const userData = {
-          id: Date.now().toString(),
-          email: email,
-          name: email.split('@')[0],
-        };
-
-        // Use auth store login
-        login(userData);
-        
-        toast.success('Login successful! Welcome to Moodly 🧠');
-        
-        // Navigate to dashboard
-        navigate('/dashboard');
-      } else {
-        toast.error('Please enter both email and password');
-      }
+      await signIn(email, password);
+      toast.success('Login successful! Welcome to Moodly 🧠');
+      navigate('/dashboard');
     } catch (err) {
-      toast.error('Login failed. Please try again.');
+      console.error('Login error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +59,7 @@ const LoginPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
@@ -89,9 +74,9 @@ const LoginPage: React.FC = () => {
                 required
               />
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full h-12 text-base font-semibold"
               disabled={isLoading}
             >
@@ -104,7 +89,7 @@ const LoginPage: React.FC = () => {
                 'Sign In'
               )}
             </Button>
-            
+
             <div className="text-center text-sm">
               <span className="text-gray-600">Don't have an account? </span>
               <Link to="/signup" className="text-blue-600 hover:text-blue-500 font-medium">

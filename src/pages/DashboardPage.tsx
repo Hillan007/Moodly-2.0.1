@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Heart, 
-  PenTool, 
-  TrendingUp, 
+import {
+  Heart,
+  PenTool,
+  TrendingUp,
   Calendar,
   Target,
   Brain,
@@ -24,7 +24,7 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/store/authStore';
 import { useMoodStore } from '@/stores/useMoodStore';
 import config from '@/config';
 
@@ -32,7 +32,7 @@ const DashboardPage: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
   const { entries, loadEntries, getMoodStats, isLoading } = useMoodStore();
   const navigate = useNavigate();
-  
+
   // AI Insights state
   const [todaysInsight, setTodaysInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
@@ -81,7 +81,7 @@ const DashboardPage: React.FC = () => {
 
       setInsightLoading(true);
       setInsightError(false);
-      
+
       try {
         // First check if the latest entry has AI insights
         const latestEntry = entries[0];
@@ -106,7 +106,7 @@ const DashboardPage: React.FC = () => {
             }
           }),
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setTodaysInsight(data.insight || data.analysis);
@@ -155,7 +155,7 @@ const DashboardPage: React.FC = () => {
   const refreshInsight = async () => {
     setInsightLoading(true);
     setInsightError(false);
-    
+
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/insights/generate`, {
         method: 'POST',
@@ -168,7 +168,7 @@ const DashboardPage: React.FC = () => {
           regenerate: true
         }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setTodaysInsight(data.insight);
@@ -327,8 +327,8 @@ const DashboardPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full mt-4"
               onClick={() => navigate('/mood-tracker')}
             >
@@ -359,8 +359,8 @@ const DashboardPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full mt-4"
               onClick={() => navigate('/journal')}
             >
@@ -378,10 +378,10 @@ const DashboardPage: React.FC = () => {
         <CardContent>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-blue-800">
-              <strong>Mindful Breathing:</strong> Take 5 deep breaths right now. Inhale for 4 counts, 
+              <strong>Mindful Breathing:</strong> Take 5 deep breaths right now. Inhale for 4 counts,
               hold for 4, exhale for 6. This simple exercise can help reduce stress and increase focus.
             </p>
-            <Button 
+            <Button
               className="mt-3"
               onClick={() => navigate('/breathing')}
             >
