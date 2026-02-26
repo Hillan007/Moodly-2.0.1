@@ -29,7 +29,7 @@ import { useMoodStore } from '@/stores/useMoodStore';
 import config from '@/config';
 
 const DashboardPage: React.FC = () => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, profile, isAuthenticated } = useAuthStore();
   const { entries, loadEntries, getMoodStats, isLoading } = useMoodStore();
   const navigate = useNavigate();
 
@@ -186,6 +186,7 @@ const DashboardPage: React.FC = () => {
   };
 
   if (!user) return null;
+  const displayName = profile?.username || user.email?.split('@')[0] || 'Friend';
 
   const features = [
     {
@@ -244,7 +245,7 @@ const DashboardPage: React.FC = () => {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">
-          Welcome back, {user?.name || 'Friend'}! 🧠
+          Welcome back, {displayName}! 🧠
         </h1>
         <p className="text-blue-100">
           How are you feeling today? Let's continue your wellness journey.

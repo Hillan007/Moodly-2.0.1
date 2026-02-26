@@ -70,12 +70,12 @@ const WelcomePage: React.FC = () => {
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
               <Link to="/login">
-                <Button variant="ghost" className="text-gray-600">
+                <Button variant="ghost" className="text-white hover:text-white/90">
                   Sign In
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                   Get Started
                 </Button>
               </Link>
@@ -101,7 +101,7 @@ const WelcomePage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/signup">
-                <Button size="lg" className="text-lg px-8 py-4 bg-blue-600 hover:bg-blue-700">
+                <Button size="lg" className="text-lg px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white">
                   Start Your Journey Free
                 </Button>
               </Link>

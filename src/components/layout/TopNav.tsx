@@ -15,8 +15,9 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function TopNav() {
-  const { user, logout } = useAuthStore();
+  const { user, profile, logout } = useAuthStore();
   const navigate = useNavigate();
+  const displayName = profile?.username || user?.email?.split('@')[0] || 'User';
 
   const handleLogout = () => {
     logout();
@@ -51,9 +52,9 @@ export function TopNav() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profile_picture} alt={user?.username} />
+                  <AvatarImage src={profile?.avatar_url} alt={displayName} />
                   <AvatarFallback className="bg-gradient-primary text-white">
-                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                    {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -62,14 +63,14 @@ export function TopNav() {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user?.username}
+                    {displayName}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
+                    {profile?.email || user?.email}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                      {user?.mood_streak} day streak
+                      {profile?.mood_streak ?? 0} day streak
                     </div>
                   </div>
                 </div>

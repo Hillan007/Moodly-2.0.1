@@ -24,11 +24,11 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuthStore();
+  const { user, profile, updateProfile } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
+    username: profile?.username || '',
+    email: profile?.email || user?.email || '',
     bio: user?.bio || '',
   });
   const [notifications, setNotifications] = useState({
@@ -39,15 +39,18 @@ export default function ProfilePage() {
   const [darkMode, setDarkMode] = useState(false);
 
   const handleSave = () => {
-    updateUser(formData);
+    updateProfile({
+      username: formData.username,
+      email: formData.email,
+    });
     setIsEditing(false);
     toast.success('Profile updated successfully!');
   };
 
   const handleCancel = () => {
     setFormData({
-      username: user?.username || '',
-      email: user?.email || '',
+      username: profile?.username || '',
+      email: profile?.email || user?.email || '',
       bio: user?.bio || '',
     });
     setIsEditing(false);
@@ -75,9 +78,9 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="relative">
               <Avatar className="w-24 h-24">
-                <AvatarImage src={user?.profile_picture} />
+                <AvatarImage src={profile?.avatar_url} />
                 <AvatarFallback className="text-2xl">
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                  {(profile?.username || user?.email || 'U').charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <Button
@@ -100,7 +103,7 @@ export default function ProfilePage() {
                       onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                     />
                   ) : (
-                    <p className="px-3 py-2 bg-muted rounded-md">{user?.username}</p>
+                    <p className="px-3 py-2 bg-muted rounded-md">{profile?.username}</p>
                   )}
                 </div>
 
@@ -114,7 +117,7 @@ export default function ProfilePage() {
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                     />
                   ) : (
-                    <p className="px-3 py-2 bg-muted rounded-md">{user?.email}</p>
+                    <p className="px-3 py-2 bg-muted rounded-md">{profile?.email || user?.email}</p>
                   )}
                 </div>
               </div>
@@ -166,12 +169,12 @@ export default function ProfilePage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center p-4 bg-mood-happy/10 rounded-lg">
-              <div className="text-2xl font-bold text-mood-happy">{user?.mood_streak || 0}</div>
+              <div className="text-2xl font-bold text-mood-happy">{profile?.mood_streak || 0}</div>
               <p className="text-sm text-muted-foreground">Day Streak</p>
             </div>
             <div className="text-center p-4 bg-primary/10 rounded-lg">
               <div className="text-2xl font-bold text-primary">
-                {user?.created_at ? Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 0}
+                {profile?.created_at ? Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 0}
               </div>
               <p className="text-sm text-muted-foreground">Days Active</p>
             </div>

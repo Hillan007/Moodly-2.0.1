@@ -25,6 +25,12 @@ const LoginPage: React.FC = () => {
     } catch (err) {
       console.error('Login error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
+      const normalizedMessage = errorMessage.toLowerCase();
+      if (normalizedMessage.includes('invalid login credentials') || normalizedMessage.includes('user not found')) {
+        toast.error('No account found for this email. Please sign up first.');
+        navigate('/signup');
+        return;
+      }
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

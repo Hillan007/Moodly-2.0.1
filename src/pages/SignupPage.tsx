@@ -47,8 +47,8 @@ const SignupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md bg-white/95 shadow-xl">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
             <span className="text-2xl">🧠</span>
@@ -70,7 +70,7 @@ const SignupPage: React.FC = () => {
                 placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full"
+                className="w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-200 focus-visible:ring-blue-500/40 focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -85,7 +85,7 @@ const SignupPage: React.FC = () => {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
+                className="w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-200 focus-visible:ring-blue-500/40 focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -100,7 +100,7 @@ const SignupPage: React.FC = () => {
                 placeholder="Create a password (min. 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full"
+                className="w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-200 focus-visible:ring-blue-500/40 focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -115,7 +115,7 @@ const SignupPage: React.FC = () => {
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full"
+                className="w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-200 focus-visible:ring-blue-500/40 focus-visible:ring-offset-0"
                 required
               />
             </div>
@@ -136,8 +136,8 @@ const SignupPage: React.FC = () => {
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-gray-600">Already have an account? </span>
-              <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+              <span className="text-white/80">Already have an account? </span>
+              <Link to="/login" className="text-white hover:text-white/90 font-medium">
                 Sign in
               </Link>
             </div>
