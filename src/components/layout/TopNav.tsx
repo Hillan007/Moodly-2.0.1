@@ -48,6 +48,10 @@ export function TopNav() {
             </span>
           </Button>
 
+          <span className="text-sm font-medium text-foreground">
+            Welcome {displayName}
+          </span>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">

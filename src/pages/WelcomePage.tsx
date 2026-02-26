@@ -70,7 +70,7 @@ const WelcomePage: React.FC = () => {
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
               <Link to="/login">
-                <Button variant="ghost" className="text-white hover:text-white/90">
+                <Button variant="ghost" className="text-gray-900 hover:text-gray-700">
                   Sign In
                 </Button>
               </Link>
