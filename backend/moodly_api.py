@@ -589,6 +589,115 @@ def get_analytics():
         'total_goals': len([])  # Can be expanded
     })
 
+@app.route('/api/music/recommendations', methods=['POST'])
+def get_music_recommendations():
+    """Get music recommendations based on mood"""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    data = request.get_json()
+    mood_score = data.get('mood_score', 5)
+    energy_level = data.get('energy_level', 5)
+    anxiety_level = data.get('anxiety_level', 5)
+    
+    # Curated playlists based on mood
+    curated_playlists = {
+        'calm': [
+            {
+                'name': 'Peaceful Mind',
+                'description': 'Gentle melodies for deep relaxation and mindfulness',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFox5g',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            },
+            {
+                'name': 'Ambient Sleep Music',
+                'description': 'Soothing ambient sounds for relaxation',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWU0ScGc2mAVI',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            }
+        ],
+        'energetic': [
+            {
+                'name': 'Energy Boost',
+                'description': 'Uplifting tracks to elevate your mood and motivation',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX3rxVfibe1L0',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            },
+            {
+                'name': 'Feel Good Indie Rock',
+                'description': 'Upbeat indie rock to brighten your day',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX9u7XXOp0l5L',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            }
+        ],
+        'anxious': [
+            {
+                'name': 'Anxiety Relief',
+                'description': 'Soothing sounds to reduce stress and anxiety',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX1s9knjP51Oa',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            },
+            {
+                'name': 'Deep Relaxation',
+                'description': 'Calming music for peaceful moments',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWSqBruwoIXHb',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            }
+        ],
+        'focused': [
+            {
+                'name': 'Deep Focus',
+                'description': 'Instrumental tracks for concentration and productivity',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX8NTLI2TtZa6',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            },
+            {
+                'name': 'Lo-Fi Beats Study',
+                'description': 'Chill beats for studying and focus',
+                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn',
+                'tracks_total': 50,
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+            }
+        ]
+    }
+    
+    # Determine mood category
+    mood_category = 'calm'
+    if anxiety_level >= 7:
+        mood_category = 'anxious'
+    elif energy_level >= 7:
+        mood_category = 'energetic'
+    elif energy_level <= 3:
+        mood_category = 'calm'
+    elif mood_score >= 7 and energy_level >= 5:
+        mood_category = 'energetic'
+    else:
+        mood_category = 'focused'
+    
+    # Get playlists for the mood category
+    playlists = curated_playlists.get(mood_category, curated_playlists['calm'])
+    
+    recommendations = {
+        'primary': {
+            'mood_category': mood_category,
+            'mood_score': mood_score,
+            'playlists': playlists,
+            'source': 'spotify',
+            'message': f'Here are some great {mood_category} playlists for your mood!'
+        },
+        'hybrid': False
+    }
+    
+    return jsonify({'recommendations': recommendations}), 200
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
     print(" Starting Flask development server...")
