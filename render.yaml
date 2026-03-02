@@ -3,43 +3,34 @@ services:
     name: moodly-backend
     env: python
     buildCommand: |
-      cd backend
-      pip install -r requirements.txt
-      python -c "import moodly_api; moodly_api.init_database()"
-    startCommand: cd backend && gunicorn --bind 0.0.0.0:$PORT moodly_api:app
+      pip install -r backend/requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT backend.moodly_api:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: FLASK_ENV
+      - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: moodly-db
-          property: connectionString
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://moodly-2.vercel.app
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: SPOTIFY_REDIRECT_URI_PROD
+        value: https://moodly-2.vercel.app/callback
+      - key: SPOTIFY_REDIRECT_URI_DEV
+        value: http://localhost:3000/callback
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-
-  - type: static
-    name: moodly-frontend
-    buildCommand: |
-      npm install
-      npm run build
-    staticPublishPath: ./dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: NODE_VERSION
-        value: 18
-
-databases:
-  - name: moodly-db
-    databaseName: moodly
-    user: moodly_user

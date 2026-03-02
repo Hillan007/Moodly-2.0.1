@@ -53,9 +53,21 @@ cors_origins = [
     "http://localhost:5173",
     "http://localhost:5174",  # Vite dev server
     "http://localhost:8084",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5174",
 ]
+
+# Add Vercel and custom productions domains
 if env == 'production':
-    cors_origins.extend(["https://moodly.vercel.app", "https://moodly.app"])
+    prod_domains = [
+        "https://moodly.vercel.app",
+        "https://moodly-2.vercel.app", 
+        "https://moodly.app",
+        os.environ.get('FRONTEND_URL', '').replace('http://', 'https://'),  # From env var
+    ]
+    cors_origins.extend([d for d in prod_domains if d and d != 'https://'])
+
+print(f"✅ CORS Origins Allowed: {cors_origins}")
 
 CORS(app, resources={
     r"/api/*": {
