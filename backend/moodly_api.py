@@ -5,6 +5,7 @@ A clean Flask API backend for the React frontend
 """
 
 import os
+import sys
 import sqlite3
 import hashlib
 import secrets
@@ -13,6 +14,11 @@ from flask import Flask, request, session, jsonify
 from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
+
+# Add backend directory to path for imports
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 # Load environment variables from .env file FIRST
 load_dotenv()
