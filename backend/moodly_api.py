@@ -14,8 +14,11 @@ from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables from .env file FIRST
 load_dotenv()
+
+# Now import music_service after env vars are loaded
+from music_service import music_service
 
 # Initialize OpenAI
 openai_api_key = os.environ.get('OPENAI_API_KEY')
@@ -44,14 +47,24 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in-production')
 
 # Configure CORS to allow requests from React dev server and production
-cors_origins = ["http://localhost:3001", "http://localhost:8084", "http://localhost:3000", "http://localhost:5173"]
+cors_origins = [
+    "http://localhost:3001", 
+    "http://localhost:3000", 
+    "http://localhost:5173",
+    "http://localhost:5174",  # Vite dev server
+    "http://localhost:8084",
+]
 if env == 'production':
     cors_origins.extend(["https://moodly.vercel.app", "https://moodly.app"])
 
 CORS(app, resources={
     r"/api/*": {
         "origins": cors_origins,
-        "supports_credentials": True
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "expose_headers": ["Content-Type"],
+        "max_age": 3600
     }
 })
 
@@ -606,20 +619,92 @@ def get_analytics():
         'total_goals': len([])  # Can be expanded
     })
 
-@app.route('/api/music/recommendations', methods=['POST'])
+@app.route('/api/music/recommendations', methods=['POST', 'OPTIONS'])
 def get_music_recommendations():
     """Get music recommendations based on mood with comprehensive Spotify fallback"""
-    user = get_current_user()
-    if not user:
-        return jsonify({'error': 'Authentication required'}), 401
+    # Handle OPTIONS for CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
     
+    print(f"🎵 Received music recommendation request: {request.method}")
+    
+    # No authentication required for music recommendations - it's just based on mood
     data = request.get_json()
+    print(f"📊 Request data: {data}")
+    
+    if not data:
+        print("❌ No data in request")
+        return jsonify({'error': 'Invalid request data'}), 400
+    
     mood_score = data.get('mood_score', 5)
     energy_level = data.get('energy_level', 5)
     anxiety_level = data.get('anxiety_level', 5)
     
-    # Curated playlists and tracks with direct Spotify URLs
-    curated_playlists = {
+    # Determine mood category for fallback
+    mood_category = 'calm'
+    if anxiety_level >= 7:
+        mood_category = 'anxious'
+    elif energy_level >= 7:
+        mood_category = 'energetic'
+    elif energy_level <= 3:
+        mood_category = 'calm'
+    elif mood_score >= 7 and energy_level >= 5:
+        mood_category = 'energetic'
+    else:
+        mood_category = 'focused'
+    
+    # Try real Spotify API first
+    spotify_tracks = None
+    if music_service.available:
+        try:
+            spotify_tracks = music_service.get_recommendations(mood_score, energy_level, anxiety_level, limit=20)
+            if spotify_tracks:
+                print(f"✅ Got {len(spotify_tracks)} real Spotify recommendations")
+                # Create a playlist from the tracks
+                playlist = {
+                    'name': f'Moodly {mood_category.capitalize()} Mix',
+                    'description': f'Personalized {mood_category} playlist based on your mood',
+                    'tracks': spotify_tracks,
+                    'tracks_total': len(spotify_tracks),
+                    'source': 'spotify_api'
+                }
+                
+                recommendations = {
+                    'primary': {
+                        'mood_category': mood_category,
+                        'mood_score': mood_score,
+                        'playlists': [playlist],
+                        'source': 'spotify_api',
+                        'message': f'Here\'s a personalized {mood_category} playlist just for you!'
+                    },
+                    'hybrid': False
+                }
+                
+                return jsonify({'recommendations': recommendations}), 200
+        except Exception as e:
+            print(f"❌ Spotify API error: {e}")
+    
+    # Fallback to curated playlists with direct links
+    print(f"⚠️ Using fallback playlists for {mood_category} mood")
+    curated_playlists = get_fallback_playlists()
+    playlists = curated_playlists.get(mood_category, curated_playlists['calm'])
+    
+    recommendations = {
+        'primary': {
+            'mood_category': mood_category,
+            'mood_score': mood_score,
+            'playlists': playlists,
+            'source': 'fallback',
+            'message': f'Here are some great {mood_category} playlists for your mood!'
+        },
+        'hybrid': False
+    }
+    
+    return jsonify({'recommendations': recommendations}), 200
+
+def get_fallback_playlists():
+    """Curated fallback playlists with direct Spotify URLs"""
+    return {
         'calm': [
             {
                 'name': 'Peaceful Mind',
@@ -631,8 +716,6 @@ def get_music_recommendations():
                     {'name': 'River Flows in You', 'artist': 'Yiruma', 'spotify_url': 'https://open.spotify.com/track/6JQm7SzLqHwNYHdad0VW2w'},
                     {'name': 'Weightless', 'artist': 'Marconi Union', 'spotify_url': 'https://open.spotify.com/track/7MXmNrGygYKNJoDIK6aaVS'},
                     {'name': 'Clair de Lune', 'artist': 'Claude Debussy', 'spotify_url': 'https://open.spotify.com/track/4Tr0VdtYf6bUJECVFlqL6h'},
-                    {'name': 'Breathe', 'artist': 'The Prodigy', 'spotify_url': 'https://open.spotify.com/track/1YPIevW9V85pzjQE6mhR9H'},
-                    {'name': 'Weightless (Ambient)', 'artist': 'Airstream', 'spotify_url': 'https://open.spotify.com/track/0AwEt5QY9T9eEWxcFqVFhJ'}
                 ]
             },
             {
@@ -641,11 +724,6 @@ def get_music_recommendations():
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWU0ScGc2mAVI',
                 'tracks_total': 50,
                 'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
-                'tracks': [
-                    {'name': 'Sleepyhead', 'artist': 'Passion Pit', 'spotify_url': 'https://open.spotify.com/track/7qiZfU4dY1lsylvNEssQNy'},
-                    {'name': 'Sleep', 'artist': 'Godspeed You! Black Emperor', 'spotify_url': 'https://open.spotify.com/track/0UF5aKyN6M9HxFXrk0lckY'},
-                    {'name': 'Ambient', 'artist': 'Brian Eno', 'spotify_url': 'https://open.spotify.com/track/3qCPFNZ3xhQGKjR0N9hcxV'},
-                ]
             }
         ],
         'energetic': [
@@ -659,8 +737,6 @@ def get_music_recommendations():
                     {'name': 'Good as Hell', 'artist': 'Lizzo', 'spotify_url': 'https://open.spotify.com/track/1PloQgLPNPtPlQJmUFFOaC'},
                     {'name': 'Happy', 'artist': 'Pharrell Williams', 'spotify_url': 'https://open.spotify.com/track/60nZcImufyMA1MKQY3dcCH'},
                     {'name': "Can't Stop the Feeling!", 'artist': 'Justin Timberlake', 'spotify_url': 'https://open.spotify.com/track/20I6sIOMTCkB6w7ryavxtO'},
-                    {'name': 'Walking on Sunshine', 'artist': 'Katrina and the Waves', 'spotify_url': 'https://open.spotify.com/track/05wIrZSwuaVWhcv5FfqeH0'},
-                    {'name': 'Three Little Birds', 'artist': 'Bob Marley & The Wailers', 'spotify_url': 'https://open.spotify.com/track/6JOTmd5h8HGFnDdp4VT3MP'}
                 ]
             },
             {
@@ -669,11 +745,6 @@ def get_music_recommendations():
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX9u7XXOp0l5L',
                 'tracks_total': 50,
                 'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
-                'tracks': [
-                    {'name': 'Here Comes the Sun', 'artist': 'The Beatles', 'spotify_url': 'https://open.spotify.com/track/6dGnYIeXmHdcikdzNNDMm2'},
-                    {'name': 'Float On', 'artist': 'Modest Mouse', 'spotify_url': 'https://open.spotify.com/track/3M8t1hbNSglQWQPNGGR1lO'},
-                    {'name': 'Best Day of My Life', 'artist': 'American Authors', 'spotify_url': 'https://open.spotify.com/track/5H06LgYlDzGiC3qXEwlD9N'}
-                ]
             }
         ],
         'anxious': [
@@ -685,21 +756,9 @@ def get_music_recommendations():
                 'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
                 'tracks': [
                     {'name': 'Breathe Me', 'artist': 'Sia', 'spotify_url': 'https://open.spotify.com/track/5WUHwvSgLXZhH1QYQ9n49A'},
-                    {'name': 'Aqueous Transmission', 'artist': 'Incubus', 'spotify_url': 'https://open.spotify.com/track/4qiyoH7HUAHlRoXfH8y5KU'},
-                    {'name': 'Raindrops', 'artist': 'Thom Yorke', 'spotify_url': 'https://open.spotify.com/track/1FvDLH6LcT5XCplzU3Qkaw'}
+                    {'name': 'Weightless', 'artist': 'Marconi Union', 'spotify_url': 'https://open.spotify.com/track/7MXmNrGygYKNJoDIK6aaVS'},
                 ]
             },
-            {
-                'name': 'Deep Relaxation',
-                'description': 'Calming music for peaceful moments',
-                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWSqBruwoIXHb',
-                'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
-                'tracks': [
-                    {'name': 'Weightless', 'artist': 'Marconi Union', 'spotify_url': 'https://open.spotify.com/track/7MXmNrGygYKNJoDIK6aaVS'},
-                    {'name': 'Alpha Waves', 'artist': 'Meditation Music', 'spotify_url': 'https://open.spotify.com/track/6QOxp5hvIx5ufHpwPPnlPR'},
-                ]
-            }
         ],
         'focused': [
             {
@@ -710,52 +769,11 @@ def get_music_recommendations():
                 'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
                 'tracks': [
                     {'name': 'Time', 'artist': 'Hans Zimmer', 'spotify_url': 'https://open.spotify.com/track/6ZFbXIJkuI1dVNWvzJzown'},
-                    {'name': 'Elegy for Dunkirk', 'artist': 'Dario Marianelli', 'spotify_url': 'https://open.spotify.com/track/2ZHKhQNNhQvTlw95R0QFVL'},
                     {'name': 'Experience', 'artist': 'Ludovico Einaudi', 'spotify_url': 'https://open.spotify.com/track/1p4VHNx1UlUvMSr4tK5pXe'}
                 ]
             },
-            {
-                'name': 'Lo-Fi Beats Study',
-                'description': 'Chill beats for studying and focus',
-                'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn',
-                'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
-                'tracks': [
-                    {'name': 'Chill Lofi', 'artist': 'Chilled Beats', 'spotify_url': 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMwbk'},
-                    {'name': 'Study Session', 'artist': 'Lo-Fi Beats', 'spotify_url': 'https://open.spotify.com/track/77FrPOvVBqjZYJEMUFsyXb'}
-                ]
-            }
         ]
     }
-    
-    # Determine mood category
-    mood_category = 'calm'
-    if anxiety_level >= 7:
-        mood_category = 'anxious'
-    elif energy_level >= 7:
-        mood_category = 'energetic'
-    elif energy_level <= 3:
-        mood_category = 'calm'
-    elif mood_score >= 7 and energy_level >= 5:
-        mood_category = 'energetic'
-    else:
-        mood_category = 'focused'
-    
-    # Get playlists for the mood category
-    playlists = curated_playlists.get(mood_category, curated_playlists['calm'])
-    
-    recommendations = {
-        'primary': {
-            'mood_category': mood_category,
-            'mood_score': mood_score,
-            'playlists': playlists,
-            'source': 'spotify',
-            'message': f'Here are some great {mood_category} playlists for your mood!'
-        },
-        'hybrid': False
-    }
-    
-    return jsonify({'recommendations': recommendations}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))

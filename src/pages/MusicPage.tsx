@@ -113,11 +113,15 @@ const MusicPage: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
+      console.log('🎵 Fetching music recommendations from:', `${config.API_BASE_URL}/api/music/recommendations`);
+      console.log('📊 Mood parameters:', { mood_score: moodScore[0], energy_level: energyLevel[0], anxiety_level: anxietyLevel[0] });
+
       const response = await fetch(`${config.API_BASE_URL}/api/music/recommendations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        mode: 'cors',
         credentials: 'include',
         signal: controller.signal,
         body: JSON.stringify({
@@ -129,10 +133,15 @@ const MusicPage: React.FC = () => {
 
       clearTimeout(timeoutId);
 
+      console.log('✅ Response status:', response.status, response.statusText);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Got recommendations:', data);
         setRecommendations(data.recommendations);
       } else {
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
