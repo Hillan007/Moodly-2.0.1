@@ -12,6 +12,10 @@ from datetime import datetime, timedelta
 from flask import Flask, request, session, jsonify
 from flask_cors import CORS
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize OpenAI
 openai_api_key = os.environ.get('OPENAI_API_KEY')
@@ -26,14 +30,27 @@ if openai_api_key:
 else:
     print("⚠️ OpenAI API key not found - AI features will be disabled")
 
+# Determine environment and set Spotify redirect URI dynamically
+env = os.environ.get('NODE_ENV', 'development').lower()
+if env == 'production':
+    spotify_redirect_uri = os.environ.get('SPOTIFY_REDIRECT_URI_PROD', 'https://moodly.vercel.app/callback')
+else:
+    spotify_redirect_uri = os.environ.get('SPOTIFY_REDIRECT_URI_DEV', 'http://localhost:3000/callback')
+
+print(f"🎵 Spotify Redirect URI ({env}): {spotify_redirect_uri}")
+
 # Create Flask application instance
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'moodly-secret-key-change-in-production')
 
-# Configure CORS to allow requests from React dev server
+# Configure CORS to allow requests from React dev server and production
+cors_origins = ["http://localhost:3001", "http://localhost:8084", "http://localhost:3000", "http://localhost:5173"]
+if env == 'production':
+    cors_origins.extend(["https://moodly.vercel.app", "https://moodly.app"])
+
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3001", "http://localhost:8084", "http://localhost:3000", "http://localhost:5173"],
+        "origins": cors_origins,
         "supports_credentials": True
     }
 })
@@ -591,7 +608,7 @@ def get_analytics():
 
 @app.route('/api/music/recommendations', methods=['POST'])
 def get_music_recommendations():
-    """Get music recommendations based on mood"""
+    """Get music recommendations based on mood with comprehensive Spotify fallback"""
     user = get_current_user()
     if not user:
         return jsonify({'error': 'Authentication required'}), 401
@@ -601,7 +618,7 @@ def get_music_recommendations():
     energy_level = data.get('energy_level', 5)
     anxiety_level = data.get('anxiety_level', 5)
     
-    # Curated playlists based on mood
+    # Curated playlists and tracks with direct Spotify URLs
     curated_playlists = {
         'calm': [
             {
@@ -609,14 +626,26 @@ def get_music_recommendations():
                 'description': 'Gentle melodies for deep relaxation and mindfulness',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFox5g',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'River Flows in You', 'artist': 'Yiruma', 'spotify_url': 'https://open.spotify.com/track/6JQm7SzLqHwNYHdad0VW2w'},
+                    {'name': 'Weightless', 'artist': 'Marconi Union', 'spotify_url': 'https://open.spotify.com/track/7MXmNrGygYKNJoDIK6aaVS'},
+                    {'name': 'Clair de Lune', 'artist': 'Claude Debussy', 'spotify_url': 'https://open.spotify.com/track/4Tr0VdtYf6bUJECVFlqL6h'},
+                    {'name': 'Breathe', 'artist': 'The Prodigy', 'spotify_url': 'https://open.spotify.com/track/1YPIevW9V85pzjQE6mhR9H'},
+                    {'name': 'Weightless (Ambient)', 'artist': 'Airstream', 'spotify_url': 'https://open.spotify.com/track/0AwEt5QY9T9eEWxcFqVFhJ'}
+                ]
             },
             {
                 'name': 'Ambient Sleep Music',
                 'description': 'Soothing ambient sounds for relaxation',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWU0ScGc2mAVI',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Sleepyhead', 'artist': 'Passion Pit', 'spotify_url': 'https://open.spotify.com/track/7qiZfU4dY1lsylvNEssQNy'},
+                    {'name': 'Sleep', 'artist': 'Godspeed You! Black Emperor', 'spotify_url': 'https://open.spotify.com/track/0UF5aKyN6M9HxFXrk0lckY'},
+                    {'name': 'Ambient', 'artist': 'Brian Eno', 'spotify_url': 'https://open.spotify.com/track/3qCPFNZ3xhQGKjR0N9hcxV'},
+                ]
             }
         ],
         'energetic': [
@@ -625,14 +654,26 @@ def get_music_recommendations():
                 'description': 'Uplifting tracks to elevate your mood and motivation',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX3rxVfibe1L0',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Good as Hell', 'artist': 'Lizzo', 'spotify_url': 'https://open.spotify.com/track/1PloQgLPNPtPlQJmUFFOaC'},
+                    {'name': 'Happy', 'artist': 'Pharrell Williams', 'spotify_url': 'https://open.spotify.com/track/60nZcImufyMA1MKQY3dcCH'},
+                    {'name': "Can't Stop the Feeling!", 'artist': 'Justin Timberlake', 'spotify_url': 'https://open.spotify.com/track/20I6sIOMTCkB6w7ryavxtO'},
+                    {'name': 'Walking on Sunshine', 'artist': 'Katrina and the Waves', 'spotify_url': 'https://open.spotify.com/track/05wIrZSwuaVWhcv5FfqeH0'},
+                    {'name': 'Three Little Birds', 'artist': 'Bob Marley & The Wailers', 'spotify_url': 'https://open.spotify.com/track/6JOTmd5h8HGFnDdp4VT3MP'}
+                ]
             },
             {
                 'name': 'Feel Good Indie Rock',
                 'description': 'Upbeat indie rock to brighten your day',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX9u7XXOp0l5L',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Here Comes the Sun', 'artist': 'The Beatles', 'spotify_url': 'https://open.spotify.com/track/6dGnYIeXmHdcikdzNNDMm2'},
+                    {'name': 'Float On', 'artist': 'Modest Mouse', 'spotify_url': 'https://open.spotify.com/track/3M8t1hbNSglQWQPNGGR1lO'},
+                    {'name': 'Best Day of My Life', 'artist': 'American Authors', 'spotify_url': 'https://open.spotify.com/track/5H06LgYlDzGiC3qXEwlD9N'}
+                ]
             }
         ],
         'anxious': [
@@ -641,14 +682,23 @@ def get_music_recommendations():
                 'description': 'Soothing sounds to reduce stress and anxiety',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX1s9knjP51Oa',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Breathe Me', 'artist': 'Sia', 'spotify_url': 'https://open.spotify.com/track/5WUHwvSgLXZhH1QYQ9n49A'},
+                    {'name': 'Aqueous Transmission', 'artist': 'Incubus', 'spotify_url': 'https://open.spotify.com/track/4qiyoH7HUAHlRoXfH8y5KU'},
+                    {'name': 'Raindrops', 'artist': 'Thom Yorke', 'spotify_url': 'https://open.spotify.com/track/1FvDLH6LcT5XCplzU3Qkaw'}
+                ]
             },
             {
                 'name': 'Deep Relaxation',
                 'description': 'Calming music for peaceful moments',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWSqBruwoIXHb',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Weightless', 'artist': 'Marconi Union', 'spotify_url': 'https://open.spotify.com/track/7MXmNrGygYKNJoDIK6aaVS'},
+                    {'name': 'Alpha Waves', 'artist': 'Meditation Music', 'spotify_url': 'https://open.spotify.com/track/6QOxp5hvIx5ufHpwPPnlPR'},
+                ]
             }
         ],
         'focused': [
@@ -657,14 +707,23 @@ def get_music_recommendations():
                 'description': 'Instrumental tracks for concentration and productivity',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DX8NTLI2TtZa6',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Time', 'artist': 'Hans Zimmer', 'spotify_url': 'https://open.spotify.com/track/6ZFbXIJkuI1dVNWvzJzown'},
+                    {'name': 'Elegy for Dunkirk', 'artist': 'Dario Marianelli', 'spotify_url': 'https://open.spotify.com/track/2ZHKhQNNhQvTlw95R0QFVL'},
+                    {'name': 'Experience', 'artist': 'Ludovico Einaudi', 'spotify_url': 'https://open.spotify.com/track/1p4VHNx1UlUvMSr4tK5pXe'}
+                ]
             },
             {
                 'name': 'Lo-Fi Beats Study',
                 'description': 'Chill beats for studying and focus',
                 'spotify_url': 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn',
                 'tracks_total': 50,
-                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6'
+                'image': 'https://i.scdn.co/image/ab67706f00000003ca5a7517156021292e5663a6',
+                'tracks': [
+                    {'name': 'Chill Lofi', 'artist': 'Chilled Beats', 'spotify_url': 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMwbk'},
+                    {'name': 'Study Session', 'artist': 'Lo-Fi Beats', 'spotify_url': 'https://open.spotify.com/track/77FrPOvVBqjZYJEMUFsyXb'}
+                ]
             }
         ]
     }
