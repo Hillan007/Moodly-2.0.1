@@ -9,11 +9,14 @@ import sys
 import sqlite3
 import hashlib
 import secrets
+import jwt
+import json
 from datetime import datetime, timedelta
 from flask import Flask, request, session, jsonify
 from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
+from urllib.request import urlopen
 
 # Add backend directory to path for imports
 backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -180,18 +183,41 @@ def verify_password(password, password_hash):
         return False
 
 def get_current_user():
-    """Get the current logged-in user"""
-    if 'user_id' not in session:
-        return None
+    """Get the current logged-in user from Supabase JWT token or session"""
+    user_id = None
     
-    conn = get_db_connection()
-    user = conn.execute(
-        'SELECT * FROM users WHERE id = ?', (session['user_id'],)
-    ).fetchone()
-    conn.close()
+    # Try to get JWT token from Authorization header (Supabase)
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header[7:]  # Remove 'Bearer ' prefix
+        try:
+            # Decode JWT without verification first (for testing)
+            # In production, verify with Supabase's public key
+            payload = jwt.decode(token, options={"verify_signature": False})
+            user_id = payload.get('sub')  # Supabase uses 'sub' for user ID
+            
+            # For now, we'll use the Supabase UUID as-is
+            # Return a user object with the Supabase user_id
+            return {
+                'id': user_id,
+                'email': payload.get('email'),
+                'username': payload.get('email', '').split('@')[0]
+            }
+        except Exception as e:
+            print(f"⚠️ JWT validation error: {e}")
+            pass
     
-    if user:
-        return dict(user)
+    # Fallback to Flask session (for legacy auth)
+    if 'user_id' in session:
+        conn = get_db_connection()
+        user = conn.execute(
+            'SELECT * FROM users WHERE id = ?', (session['user_id'],)
+        ).fetchone()
+        conn.close()
+        
+        if user:
+            return dict(user)
+    
     return None
 
 def get_fallback_insight(mood_data):

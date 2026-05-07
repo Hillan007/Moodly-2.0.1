@@ -8,6 +8,7 @@ import { useMoodStore } from '@/stores/useMoodStore';
 import { toast } from 'sonner';
 import MusicRecommendations from '@/components/ui/music-recommendations';
 import config from '@/config';
+import { supabase } from '@/lib/supabase';
 
 export default function MoodTrackerPage() {
   const [mood, setMood] = useState([5]);
@@ -35,15 +36,26 @@ export default function MoodTrackerPage() {
 
     if (success) {
       toast.success('Mood logged successfully!');
-      
+
       // Fetch music recommendations based on the logged mood
       setIsLoadingMusic(true);
       try {
+        // Get JWT token from Supabase
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+
+        const headers: any = {
+          'Content-Type': 'application/json',
+        };
+
+        // Add JWT token to Authorization header if available
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch(`${config.API_BASE_URL}/api/music/recommendations`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           credentials: 'include',
           body: JSON.stringify({
             mood_score: mood[0],
@@ -184,7 +196,7 @@ export default function MoodTrackerPage() {
 
       {/* Music Recommendations */}
       {(musicRecommendations || isLoadingMusic) && (
-        <MusicRecommendations 
+        <MusicRecommendations
           mood={mood[0]}
           energy={energy[0]}
           anxiety={anxiety[0]}

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useAuthStore } from './authStore';
 import config from '../config';
+import { supabase } from '@/lib/supabase';
 
 export interface MoodEntry {
   id: number;
@@ -48,11 +49,22 @@ export const useMoodStore = create<MoodState>()(
         }
 
         try {
+          // Get JWT token from Supabase
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+
+          const headers: any = {
+            'Content-Type': 'application/json',
+          };
+
+          // Add JWT token to Authorization header if available
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
           const response = await fetch(`${API_BASE_URL}/api/moods`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
             credentials: 'include',
             body: JSON.stringify({
               mood_score: entryData.mood,
@@ -87,7 +99,7 @@ export const useMoodStore = create<MoodState>()(
 
       getMoodStats: () => {
         const { entries } = get();
-        
+
         if (entries.length === 0) {
           return {
             average_mood: 0,
@@ -100,12 +112,12 @@ export const useMoodStore = create<MoodState>()(
         const average_mood = entries.reduce((sum, entry) => sum + entry.mood, 0) / entries.length;
         const recent_entries = entries.slice(0, 7);
         const older_entries = entries.slice(7, 14);
-        
+
         let mood_trend: 'improving' | 'stable' | 'declining' = 'stable';
         if (recent_entries.length > 0 && older_entries.length > 0) {
           const recent_avg = recent_entries.reduce((sum, entry) => sum + entry.mood, 0) / recent_entries.length;
           const older_avg = older_entries.reduce((sum, entry) => sum + entry.mood, 0) / older_entries.length;
-          
+
           if (recent_avg > older_avg + 0.5) mood_trend = 'improving';
           else if (recent_avg < older_avg - 0.5) mood_trend = 'declining';
         }
@@ -130,11 +142,22 @@ export const useMoodStore = create<MoodState>()(
 
         set({ isLoading: true });
         try {
+          // Get JWT token from Supabase
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+
+          const headers: any = {
+            'Content-Type': 'application/json',
+          };
+
+          // Add JWT token to Authorization header if available
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
           const response = await fetch(`${API_BASE_URL}/api/moods`, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
             credentials: 'include',
           });
 
@@ -165,8 +188,8 @@ export const useMoodStore = create<MoodState>()(
     }),
     {
       name: 'moodly-mood-data',
-      partialize: (state) => ({ 
-        entries: state.entries 
+      partialize: (state) => ({
+        entries: state.entries
       }),
     }
   )
