@@ -158,50 +158,74 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // Fetch the profile (either existing or newly created)
           await get().fetchProfile();
+        } catch (profileError) {
+          console.warn('Profile creation warning (non-critical):', profileError);
+          // Don't fail signup if profile creation fails - auth succeeded
+        }
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      throw error;
+    } finally {
+      set({ loading: false, isLoading: false });
+    }
+  },
 
-          logout: async () => {
-            await get().signOut();
-          },
+  signOut: async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
 
-            updateProfile: async (updates: Partial<Profile>) => {
-              const { user } = get();
-              if (!user) throw new Error('No user logged in');
+      set({ user: null, profile: null, isAuthenticated: false });
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
+  },
 
-              try {
-                const { error } = await supabase
-                  .from('profiles')
-                  .update(updates)
-                  .eq('id', user.id);
+  logout: async () => {
+    await get().signOut();
+  },
 
-                if (error) throw error;
+  updateProfile: async (updates: Partial<Profile>) => {
+    const { user } = get();
+    if (!user) throw new Error('No user logged in');
 
-                set((state) => ({
-                  profile: state.profile ? { ...state.profile, ...updates } : null
-                }));
-              } catch (error) {
-                console.error('Update profile error:', error);
-                throw error;
-              }
-            },
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
 
-              fetchProfile: async () => {
-                const { user } = get();
-                if (!user) return;
+      if (error) throw error;
 
-                try {
-                  const { data, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
+      set((state) => ({
+        profile: state.profile ? { ...state.profile, ...updates } : null
+      }));
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  },
 
-                  if (error) throw error;
+  fetchProfile: async () => {
+    const { user } = get();
+    if (!user) return;
 
-                  set({ profile: data });
-                } catch (error) {
-                  console.error('Fetch profile error:', error);
-                }
-              },
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      set({ profile: data });
+    } catch (error) {
+      console.error('Fetch profile error:', error);
+    }
+  },
 }));
 
 // Initialize auth state
