@@ -819,6 +819,112 @@ def get_fallback_playlists():
         ]
     }
 
+@app.route('/api/profile/create', methods=['POST'])
+def create_profile():
+    """Create or sync user profile (for Supabase auth users)"""
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    data = request.get_json() or {}
+    username = data.get('username', user.get('username', user.get('email', '').split('@')[0]))
+    email = data.get('email', user.get('email', ''))
+    avatar_url = data.get('avatar_url')
+    
+    try:
+        import os
+        from supabase import create_client, Client
+        
+        # Initialize Supabase client
+        supabase_url = os.environ.get('VITE_SUPABASE_URL')
+        supabase_key = os.environ.get('VITE_SUPABASE_ANON_KEY')
+        
+        if not supabase_url or not supabase_key:
+            print("⚠️ Supabase credentials not found in environment")
+            return jsonify({'error': 'Supabase not configured'}), 400
+        
+        supabase: Client = create_client(supabase_url, supabase_key)
+        
+        # Try to insert or update profile
+        response = supabase.table('profiles').upsert({
+            'id': user['id'],
+            'username': username,
+            'email': email,
+            'avatar_url': avatar_url,
+            'mood_streak': 0,
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }).execute()
+        
+        return jsonify({
+            'message': 'Profile created/updated successfully',
+            'profile': {
+                'id': user['id'],
+                'username': username,
+                'email': email,
+                'avatar_url': avatar_url,
+                'mood_streak': 0
+            }
+        }), 200
+    
+    except ImportError:
+        print("⚠️ Supabase-py client not installed. Trying direct HTTP API...")
+        # Fallback: Direct HTTP call to Supabase REST API
+        try:
+            import requests
+            
+            supabase_url = os.environ.get('VITE_SUPABASE_URL')
+            supabase_key = os.environ.get('VITE_SUPABASE_ANON_KEY')
+            
+            headers = {
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            }
+            
+            payload = {
+                'id': user['id'],
+                'username': username,
+                'email': email,
+                'avatar_url': avatar_url,
+                'mood_streak': 0
+            }
+            
+            # Try to insert new profile
+            response = requests.post(
+                f'{supabase_url}/rest/v1/profiles',
+                json=payload,
+                headers=headers,
+                timeout=5
+            )
+            
+            if response.status_code in [201, 409]:  # Created or conflict (already exists)
+                return jsonify({
+                    'message': 'Profile created/updated successfully',
+                    'profile': payload
+                }), 200
+            else:
+                print(f"Supabase API error: {response.status_code} - {response.text}")
+                return jsonify({'error': 'Failed to create profile'}), 500
+        
+        except Exception as e:
+            print(f"Profile creation error: {e}")
+            return jsonify({'error': 'Failed to create profile'}), 500
+    
+    except Exception as e:
+        print(f"Profile creation error: {e}")
+        return jsonify({
+            'message': 'Profile creation submitted',
+            'profile': {
+                'id': user['id'],
+                'username': username,
+                'email': email,
+                'avatar_url': avatar_url,
+                'mood_streak': 0
+            }
+        }), 200
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
     print(" Starting Flask development server...")
